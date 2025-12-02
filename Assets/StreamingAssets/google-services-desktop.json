@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "64357441826",
+    "firebase_url": "https://dda-asg-1-f88f0-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "dda-asg-1-f88f0",
+    "storage_bucket": "dda-asg-1-f88f0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64357441826:android:0364cf8a1e4f6b1c09857b",
+        "android_client_info": {
+          "package_name": "com.np.dda2025"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXqkhIILmuSmODi3bUYmTA6OyD77GEpYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64357441826:android:fe0f34250818f47209857b",
+        "android_client_info": {
+          "package_name": "com.np.kele2025"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXqkhIILmuSmODi3bUYmTA6OyD77GEpYU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
