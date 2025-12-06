@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.UI;
 
 
 public class ImageTracker : MonoBehaviour
@@ -12,10 +13,16 @@ public class ImageTracker : MonoBehaviour
     [SerializeField]
     private GameObject[] placeablePrefabs;
 
+
+
     private Dictionary<string, GameObject> spawnedPrefabs = new Dictionary<string, GameObject>();
+
+    public string currentVisibleCardName = "";
 
     private void Start()
     {
+
+
         if (trackedImageManager != null)
         {
             trackedImageManager.trackablesChanged.AddListener(OnImageChanged);
@@ -60,6 +67,10 @@ public class ImageTracker : MonoBehaviour
             {
                 //Disable the associated content
                 spawnedPrefabs[trackedImage.referenceImage.name].SetActive(false);
+                if (currentVisibleCardName == name)
+                {
+                    currentVisibleCardName = "";
+                }
             }
             else if (trackedImage.trackingState == TrackingState.Tracking)
             {
@@ -67,6 +78,8 @@ public class ImageTracker : MonoBehaviour
                 spawnedPrefabs[trackedImage.referenceImage.name].transform.position = trackedImage.transform.position;
                 spawnedPrefabs[trackedImage.referenceImage.name].transform.rotation = trackedImage.transform.rotation;
                 spawnedPrefabs[trackedImage.referenceImage.name].SetActive(true);
+
+                currentVisibleCardName = name;
             }
         }
     }
