@@ -25,6 +25,7 @@ public class AuthManager : MonoBehaviour
 
     void Start()
     {
+
         // Making sure code is running
         Debug.Log("AuthManager is running");
         // Initialize Firebase Auth
@@ -32,11 +33,7 @@ public class AuthManager : MonoBehaviour
 
         // CHECK IF PLAYER HAS ACCOUNT (Auto-Login)
         // If a user is cached from a previous session, go straight to game
-        if (auth.CurrentUser != null)
-        {
-            Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
-            LoadGameScene();
-        }
+
     }
 
     // --- BUTTON FUNCTIONS ---
@@ -56,7 +53,7 @@ public class AuthManager : MonoBehaviour
         loginFeedbackText.text = "Logging in...";
 
         // Call Firebase Login
-        auth.CreateUserWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
+        auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
         {
             if (task.IsCanceled || task.IsFaulted)
             {
@@ -69,6 +66,11 @@ public class AuthManager : MonoBehaviour
                     loginFeedbackText.text = friendlyMessage;
                 }
                 return;
+            }
+            if (auth.CurrentUser != null)
+            {
+                Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
+                LoadGameScene();
             }
 
             // Success!
@@ -103,6 +105,11 @@ public class AuthManager : MonoBehaviour
                     string friendlyMessage = GetErrorMessage(errorCode);
                     signupFeedbackText.text = friendlyMessage;
                 }
+                if (auth.CurrentUser != null)
+                {
+                    Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
+                    LoadGameScene();
+                }
                 return;
             }
 
@@ -118,7 +125,7 @@ public class AuthManager : MonoBehaviour
     private void LoadGameScene()
     {
         // Replace "AR_Scene" with the exact name of your game scene
-        SceneManager.LoadScene("AR_Scene");
+        SceneManager.LoadScene("AR Scene");
     }
 
     // This fulfills the "User-friendly error messages" requirement (Week 4 Part 5)
@@ -140,6 +147,8 @@ public class AuthManager : MonoBehaviour
                 return "This email is already taken.";
             case AuthError.WeakPassword:
                 return "Password is too weak. Use at least 6 characters.";
+            case AuthError.InvalidCredential:
+                return "Invalid Email or Password.";
             default:
                 return "An unknown error occurred.";
         }
