@@ -31,8 +31,9 @@ public class AuthManager : MonoBehaviour
         // Initialize Firebase Auth
         auth = FirebaseAuth.DefaultInstance;
 
-        // CHECK IF PLAYER HAS ACCOUNT (Auto-Login)
-        // If a user is cached from a previous session, go straight to game
+        loginFeedbackText.text = "";
+        signupFeedbackText.text = "";
+
 
     }
 
@@ -40,6 +41,7 @@ public class AuthManager : MonoBehaviour
 
     public void OnLoginButtonClicked()
     {
+        loginFeedbackText.text = "";
         string email = loginEmailInput.text;
         string password = loginPasswordInput.text;
 
@@ -75,12 +77,13 @@ public class AuthManager : MonoBehaviour
 
             // Success!
             Debug.Log("Login Successful!");
-            LoadGameScene();
+
         });
     }
 
     public void OnSignupButtonClicked()
     {
+        signupFeedbackText.text = "";
         string email = signupEmailInput.text;
         string password = signupPasswordInput.text;
 
@@ -105,18 +108,15 @@ public class AuthManager : MonoBehaviour
                     string friendlyMessage = GetErrorMessage(errorCode);
                     signupFeedbackText.text = friendlyMessage;
                 }
-                if (auth.CurrentUser != null)
-                {
-                    Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
-                    LoadGameScene();
-                }
                 return;
             }
+            if (auth.CurrentUser != null)
+            {
+                Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
+                LoadGameScene();
+            }
 
-            // Success!
-            Debug.Log("Account Created!");
-            // Optional: Create initial database data here (we can add this later)
-            LoadGameScene();
+
         });
     }
 
