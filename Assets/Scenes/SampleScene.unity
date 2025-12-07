@@ -3273,7 +3273,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   imageTracker: {fileID: 433576168}
   dbManager: {fileID: 1173326382}
-  addToCollectionButton: {fileID: 0}
+  allButtons:
+  - cardName: 
+    specificButton: {fileID: 0}
 --- !u!4 &818423514
 Transform:
   m_ObjectHideFlags: 0

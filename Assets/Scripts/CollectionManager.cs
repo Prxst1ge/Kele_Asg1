@@ -1,26 +1,58 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class CollectionManager : MonoBehaviour
 {
     [Header("References")]
     public ImageTracker imageTracker;     // Drag your AR Session Origin here
     public DatabaseManager dbManager;     // Drag the GameObject this script is on
-    public Button addToCollectionButton;  // Drag your UI Button here
+
+    [System.Serializable]
+    public struct IngredientButtonLink
+    {
+        public string cardName;      // e.g. "PineappleTart"
+        public Button specificButton; // Drag the specific UI button here
+    }
+
+    public List<IngredientButtonLink> allButtons;
+
+    void Start()
+    {
+        // Hide ALL buttons at start
+        foreach (var item in allButtons)
+        {
+            if (item.specificButton != null)
+                item.specificButton.gameObject.SetActive(false);
+        }
+    }
 
     void Update()
     {
+        string currentCard = "";
+
+        if (imageTracker != null)
+        {
+            currentCard = imageTracker.currentVisibleCardName;
+        }
         // 1. Check if the AR Camera sees a card
         // We read the variable 'currentVisibleCardName' from your ImageTracker script
-        if (imageTracker != null && !string.IsNullOrEmpty(imageTracker.currentVisibleCardName))
+        foreach (var item in allButtons)
         {
-            // Card found: Enable the button so player can click it
-            addToCollectionButton.interactable = true;
-        }
-        else
-        {
-            // No card: Disable the button
-            addToCollectionButton.interactable = false;
+            if (item.specificButton == null) continue;
+
+            // If this button matches the card we are looking at...
+            if (!string.IsNullOrEmpty(currentCard) && item.cardName == currentCard)
+            {
+                // SHOW IT!
+                item.specificButton.gameObject.SetActive(true);
+                item.specificButton.interactable = true;
+            }
+            else
+            {
+                // HIDE IT! (Because we aren't looking at this specific ingredient)
+                item.specificButton.gameObject.SetActive(false);
+            }
         }
     }
 
