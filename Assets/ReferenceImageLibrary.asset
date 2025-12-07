@@ -27,3 +27,23 @@ MonoBehaviour:
     m_SpecifySize: 1
     m_Name: Pineapple_Ingredient
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5285975469710669310
+      m_GuidHigh: 15091528524961252756
+    m_SerializedTextureGuid:
+      m_GuidLow: 15651403833879448063
+      m_GuidHigh: 9767894079008426362
+    m_Size: {x: 0.063, y: 0.096335664}
+    m_SpecifySize: 1
+    m_Name: Flour_Ingredient
+    m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5390965241771026493
+      m_GuidHigh: 6844367969890632834
+    m_SerializedTextureGuid:
+      m_GuidLow: 17425801828529097560
+      m_GuidHigh: 17523884139636931387
+    m_Size: {x: 0.063, y: 0.096335664}
+    m_SpecifySize: 1
+    m_Name: Butter_Ingredient
+    m_Texture: {fileID: 0}

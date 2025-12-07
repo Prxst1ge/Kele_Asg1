@@ -6,6 +6,7 @@ public class IngredientController : MonoBehaviour
 {
     [Header("Setup")]
     [SerializeField] string ingredientId = "pineapple";
+    
     [SerializeField] Transform ingredientModel;
     [SerializeField] TMP_Text statusText;          // per-ingredient status (optional)
     [SerializeField] GameObject addedTickIcon;     // per-ingredient tick (optional)
