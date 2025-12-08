@@ -2,85 +2,130 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using UnityEngine.UI;
-
 
 public class ImageTracker : MonoBehaviour
 {
-    [SerializeField]
-    private ARTrackedImageManager trackedImageManager;
+    [Header("AR Components")]
+    [SerializeField] private ARTrackedImageManager trackedImageManager;
 
-    [SerializeField]
-    private GameObject[] placeablePrefabs;
+    [Header("Prefabs to spawn (name must match reference image name)")]
+    [SerializeField] private GameObject[] placeablePrefabs;
 
+    // imageName -> prefab template
+    private Dictionary<string, GameObject> prefabLookup =
+        new Dictionary<string, GameObject>();
 
+    // each tracked image (unique ID) -> spawned instance
+    private Dictionary<TrackableId, GameObject> spawnedByTrackableId =
+        new Dictionary<TrackableId, GameObject>();
 
-    private Dictionary<string, GameObject> spawnedPrefabs = new Dictionary<string, GameObject>();
-
+    // optional: for other scripts that want to know which card was last seen
     public string currentVisibleCardName = "";
 
-    private void Start()
+    void Awake()
     {
+        if (trackedImageManager == null)
+            trackedImageManager = GetComponent<ARTrackedImageManager>();
 
-
-        if (trackedImageManager != null)
-        {
-            trackedImageManager.trackablesChanged.AddListener(OnImageChanged);
-            SetupPrefabs();
-        }
-    }
-
-    void SetupPrefabs()
-    {
+        // build lookup from prefab name -> prefab
+        prefabLookup.Clear();
         foreach (GameObject prefab in placeablePrefabs)
         {
-            GameObject newPrefab = Instantiate(prefab, Vector3.zero, Quaternion.identity);
-            newPrefab.name = prefab.name;
-            newPrefab.SetActive(false);
-            spawnedPrefabs.Add(prefab.name, newPrefab);
+            if (prefab == null) continue;
+
+            string key = prefab.name;
+            if (!prefabLookup.ContainsKey(key))
+                prefabLookup.Add(key, prefab);
+            else
+                Debug.LogWarning($"[ImageTracker] Duplicate prefab name '{key}' in placeablePrefabs.");
         }
     }
 
-    void OnImageChanged(ARTrackablesChangedEventArgs<ARTrackedImage> eventArgs)
+    void OnEnable()
     {
-        foreach (ARTrackedImage trackedImage in eventArgs.added)
+        if (trackedImageManager != null)
+            trackedImageManager.trackedImagesChanged += OnTrackedImagesChanged;
+    }
+
+    void OnDisable()
+    {
+        if (trackedImageManager != null)
+            trackedImageManager.trackedImagesChanged -= OnTrackedImagesChanged;
+    }
+
+    void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
+    {
+        // New images detected
+        foreach (ARTrackedImage trackedImage in args.added)
         {
-            UpdateImage(trackedImage);
+            CreateInstanceFor(trackedImage);
         }
 
-        foreach (ARTrackedImage trackedImage in eventArgs.updated)
+        // Existing images updated (pose / tracking state)
+        foreach (ARTrackedImage trackedImage in args.updated)
         {
-            UpdateImage(trackedImage);
+            UpdateInstanceFor(trackedImage);
         }
 
-        foreach (KeyValuePair<TrackableId, ARTrackedImage> lostObj in eventArgs.removed)
+        // Images lost
+        foreach (ARTrackedImage trackedImage in args.removed)
         {
-            UpdateImage(lostObj.Value);
+            RemoveInstanceFor(trackedImage);
         }
     }
 
-    void UpdateImage(ARTrackedImage trackedImage)
+    void CreateInstanceFor(ARTrackedImage trackedImage)
     {
-        if (trackedImage != null)
-        {
-            if (trackedImage.trackingState == TrackingState.Limited || trackedImage.trackingState == TrackingState.None)
-            {
-                //Disable the associated content
-                spawnedPrefabs[trackedImage.referenceImage.name].SetActive(false);
-                if (currentVisibleCardName == name)
-                {
-                    currentVisibleCardName = "";
-                }
-            }
-            else if (trackedImage.trackingState == TrackingState.Tracking)
-            {
-                //Enable the associated content
-                spawnedPrefabs[trackedImage.referenceImage.name].transform.position = trackedImage.transform.position;
-                spawnedPrefabs[trackedImage.referenceImage.name].transform.rotation = trackedImage.transform.rotation;
-                spawnedPrefabs[trackedImage.referenceImage.name].SetActive(true);
+        if (trackedImage == null) return;
 
-                currentVisibleCardName = name;
-            }
+        string imageName = trackedImage.referenceImage.name;
+
+        if (!prefabLookup.TryGetValue(imageName, out GameObject prefab))
+        {
+            Debug.LogWarning($"[ImageTracker] No prefab found for image '{imageName}'.");
+            return;
         }
+
+        // spawn a NEW instance for this specific detected image
+        GameObject instance = Instantiate(prefab,
+            trackedImage.transform.position,
+            trackedImage.transform.rotation);
+
+        // parent to the tracked image so it follows the card
+        instance.transform.SetParent(trackedImage.transform);
+
+        spawnedByTrackableId[trackedImage.trackableId] = instance;
+
+        currentVisibleCardName = imageName;
+    }
+
+    void UpdateInstanceFor(ARTrackedImage trackedImage)
+    {
+        if (trackedImage == null) return;
+
+        if (!spawnedByTrackableId.TryGetValue(trackedImage.trackableId, out GameObject instance))
+            return;
+
+        // enable / disable based on tracking state
+        bool isTracking = trackedImage.trackingState == TrackingState.Tracking;
+        instance.SetActive(isTracking);
+
+        if (isTracking)
+            currentVisibleCardName = trackedImage.referenceImage.name;
+    }
+
+    void RemoveInstanceFor(ARTrackedImage trackedImage)
+    {
+        if (trackedImage == null) return;
+
+        if (spawnedByTrackableId.TryGetValue(trackedImage.trackableId, out GameObject instance))
+        {
+            Destroy(instance);
+            spawnedByTrackableId.Remove(trackedImage.trackableId);
+        }
+
+        // if we just lost the last card of that type, you can optionally clear
+        if (currentVisibleCardName == trackedImage.referenceImage.name)
+            currentVisibleCardName = "";
     }
 }

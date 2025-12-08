@@ -9524,6 +9524,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Butter_Ingredient
       objectReference: {fileID: 0}
+    - target: {fileID: 9200436921171281596, guid: 4191114f01c9fa3408cd979f41b47058, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
