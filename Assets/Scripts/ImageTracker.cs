@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using UnityEngine.UI;
 
 public class ImageTracker : MonoBehaviour
 {
@@ -11,6 +12,7 @@ public class ImageTracker : MonoBehaviour
     [Header("Prefabs to spawn (name must match reference image name)")]
     [SerializeField] private GameObject[] placeablePrefabs;
 
+    [SerializeField] private CollectionManager collectionManager;
     // imageName -> prefab template
     private Dictionary<string, GameObject> prefabLookup =
         new Dictionary<string, GameObject>();
@@ -128,4 +130,28 @@ public class ImageTracker : MonoBehaviour
         if (currentVisibleCardName == trackedImage.referenceImage.name)
             currentVisibleCardName = "";
     }
+
+    void LinkButtonToManager(GameObject spawnedPrefab, string cardName)
+    {
+        // 1. Find the button component inside the spawned prefab
+        // We use GetComponentInChildren to find the button nested deep inside your Prefab.
+        // NOTE: The button must be named exactly "Add to Recipe_Button" for this to work.
+        Button addButton = spawnedPrefab.GetComponentInChildren<Button>();
+
+        if (addButton != null && collectionManager != null)
+        {
+            // 2. Remove any old events (crucial for cleaning up prefabs)
+            addButton.onClick.RemoveAllListeners();
+
+            // 3. Link the button's OnClick event to the CollectionManager function
+            // The CollectionManager reads the currently visible card name, so we just call the function.
+            addButton.onClick.AddListener(collectionManager.OnAddButtonPressed);
+        }
+        else
+        {
+            // This warning helps diagnose if the button name is wrong or the reference is missing.
+            Debug.LogWarning($"Failed to link button in prefab for {cardName}. Check button name or CollectionManager reference.");
+        }
+    }
+
 }
