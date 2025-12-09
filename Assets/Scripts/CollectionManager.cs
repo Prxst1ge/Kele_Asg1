@@ -1,77 +1,35 @@
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.UI; // Still needed for the OnAddButtonPressed definition
 using System.Collections.Generic;
 
 public class CollectionManager : MonoBehaviour
 {
     [Header("References")]
-    public ImageTracker imageTracker;     // Drag your AR Session Origin here
-    public DatabaseManager dbManager;     // Drag the GameObject this script is on
+    public ImageTracker imageTracker;
+    public DatabaseManager dbManager;
 
-    [System.Serializable]
-    public struct IngredientButtonLink
-    {
-        public string cardName;      // e.g. "PineappleTart"
-        public Button specificButton; // Drag the specific UI button here
-    }
+    // No Start() or Update() methods needed here anymore.
 
-    public List<IngredientButtonLink> allButtons;
-
-    void Start()
-    {
-        // Hide ALL buttons at start
-        foreach (var item in allButtons)
-        {
-            if (item.specificButton != null)
-                item.specificButton.gameObject.SetActive(false);
-        }
-    }
-
-    void Update()
-    {
-        string currentCard = "";
-
-        if (imageTracker != null)
-        {
-            currentCard = imageTracker.currentVisibleCardName;
-        }
-        // 1. Check if the AR Camera sees a card
-        // We read the variable 'currentVisibleCardName' from your ImageTracker script
-        foreach (var item in allButtons)
-        {
-            if (item.specificButton == null) continue;
-
-            // If this button matches the card we are looking at...
-            if (!string.IsNullOrEmpty(currentCard) && item.cardName == currentCard)
-            {
-                // SHOW IT!
-                item.specificButton.gameObject.SetActive(true);
-                item.specificButton.interactable = true;
-            }
-            else
-            {
-                // HIDE IT! (Because we aren't looking at this specific ingredient)
-                item.specificButton.gameObject.SetActive(false);
-            }
-        }
-    }
-
-    // --- LINK THIS TO YOUR BUTTON'S ON CLICK EVENT ---
+    // --- LINK ALL YOUR BUTTONS TO THIS SAME FUNCTION ---
     public void OnAddButtonPressed()
     {
-        // 1. Get the name of the card (e.g., "PineappleTart")
-        string cardName = imageTracker.currentVisibleCardName;
+        // Get the ingredient name that is currently visible in the ImageTracker
+        string ingredientName = imageTracker.currentVisibleCardName;
 
-        if (!string.IsNullOrEmpty(cardName))
+        if (!string.IsNullOrEmpty(ingredientName))
         {
-            Debug.Log("Button Pressed! Requesting save for: " + cardName);
+            // IMPORTANT: You must define the main card this ingredient belongs to.
+            // Assuming for now all scanned ingredients belong to "PineappleTart".
+            string mainCardName = "PineappleTart";
 
-            // 2. Tell the Database Manager to save it
-            dbManager.AddCardToDatabase(cardName);
+            Debug.Log($"Button Pressed! Requesting save for: {ingredientName} under {mainCardName}");
+
+            // Send the ingredient name and its parent card to the DatabaseManager
+            dbManager.AddIngredientToDatabase(mainCardName, ingredientName);
         }
         else
         {
-            Debug.LogWarning("Button pressed but no card name found!");
+            Debug.LogWarning("Tried to save, but no card is currently visible!");
         }
     }
 }

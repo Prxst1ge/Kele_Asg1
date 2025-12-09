@@ -10,7 +10,7 @@ using System.Collections.Generic;
 
 public class AuthManager : MonoBehaviour
 {
-
+    public DatabaseManager dbManager;
 
     public TMP_InputField loginEmailInput;
     public TMP_InputField loginPasswordInput;
@@ -57,7 +57,7 @@ public class AuthManager : MonoBehaviour
         // Call Firebase Login
         auth.SignInWithEmailAndPasswordAsync(email, password).ContinueWithOnMainThread(task =>
         {
-            if (task.IsCanceled || task.IsFaulted)
+            if (task.IsCanceled || task.IsFaulted) // Login Failed
             {
                 // ERROR HANDLING 
                 FirebaseException firebaseEx = task.Exception.GetBaseException() as FirebaseException;
@@ -69,9 +69,18 @@ public class AuthManager : MonoBehaviour
                 }
                 return;
             }
+            string currentUserId = task.Result.User.UserId;
             if (auth.CurrentUser != null)
             {
                 Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
+                dbManager.CheckIfProfileExists(currentUserId, (profileExists) =>
+                {
+                    if (!profileExists)
+                    {
+                        // Profile is missing (new user or old user with no data): create the structure
+                        dbManager.CreateNewUserProfile(currentUserId, "PineappleTart");
+                    }
+                });
                 LoadGameScene();
             }
 
@@ -113,6 +122,8 @@ public class AuthManager : MonoBehaviour
             if (auth.CurrentUser != null)
             {
                 Debug.Log("User already signed in: " + auth.CurrentUser.UserId);
+                string newUserId = task.Result.User.UserId;
+                dbManager.CreateNewUserProfile(newUserId, "PineappleTart");
                 LoadGameScene();
             }
 

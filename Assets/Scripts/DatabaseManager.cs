@@ -4,6 +4,7 @@ using Firebase.Auth;
 using Firebase.Extensions;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using System; // Required for Action<bool> callback
 
 public class DatabaseManager : MonoBehaviour
 {
@@ -11,22 +12,16 @@ public class DatabaseManager : MonoBehaviour
     private string userID;
 
     [Header("Collection UI")]
-    // Drag your "Inventory/Collection" UI Images here. 
-    // IMPORTANT: Name these GameObjects EXACTLY the same as your tracking cards (e.g. "PineappleTart")
     public GameObject[] collectionIcons;
 
     void Start()
     {
-        // 1. Initialize Database Reference
         dbReference = FirebaseDatabase.DefaultInstance.RootReference;
 
-        // 2. Get the Current User's ID from the Auth system
         if (FirebaseAuth.DefaultInstance.CurrentUser != null)
         {
             userID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-            Debug.Log("Database initialized for User: " + userID);
-
-            // 3. Check the database immediately to update the UI
+            // Load data for existing users after login
             LoadUserCollection();
         }
         else
@@ -35,68 +30,113 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // --- WRITE FUNCTION (Saves data & Creates Folder) ---
-    // This is called when you press the "Add to Collection" button
-    public void AddCardToDatabase(string cardName)
+    private static readonly List<string> MasterIngredientList = new List<string>
     {
-        if (string.IsNullOrEmpty(userID)) return;
+        "Butter",
+        "Flour",
+        "Pineapple",
+    };
+    // --- FUNCTION 1: INITIALIZE PROFILE (CALLED BY AUTHMANAGER) ---
+    public void CreateNewUserProfile(string userId, string initialMainCard)
+    {
+        Dictionary<string, object> ingredientChecklist = new Dictionary<string, object>();
 
-        // DEFINING THE PATH:
-        // users -> [UserID] -> collection -> [CardName]
-        // Example: users/AbCd123/collection/PineappleTart
+        // Use the Master List to create the checklist with FALSE values
+        foreach (string ingredient in MasterIngredientList)
+        {
+            ingredientChecklist.Add(ingredient, false);
+        }
 
-        dbReference.Child("users").Child(userID).Child("collection").Child(cardName).SetValueAsync(true)
+        // The entire path where the ingredients will be saved
+        DatabaseReference pathReference = dbReference.Child("users").Child(userId)
+                                                    .Child("collection")
+                                                    .Child(initialMainCard)
+                                                    .Child("ingredients");
+
+        // Write the entire checklist Dictionary in one go
+        pathReference.SetValueAsync(ingredientChecklist);
+
+        Debug.Log($"Created profile checklist for user {userId}. Initial ingredients set to FALSE.");
+    }
+
+    // --- FUNCTION 2: PROFILE EXISTENCE CHECK (CALLED BY AUTHMANAGER) ---
+    public void CheckIfProfileExists(string userId, Action<bool> callback)
+    {
+        // Check for the existence of the 'collection' node under the UserID
+        dbReference.Child("users").Child(userId).Child("collection").GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
                 if (task.IsFaulted)
                 {
-                    Debug.LogError("Save failed: " + task.Exception);
+                    Debug.LogError("Database check failed: " + task.Exception);
+                    callback(false);
+                    return;
                 }
-                else if (task.IsCompleted)
-                {
-                    Debug.Log("Success! Saved " + cardName + " to Firebase.");
 
-                    // Reload the UI so the item turns white immediately
+                bool profileExists = task.Result.Exists;
+                callback(profileExists);
+            });
+    }
+
+    // --- FUNCTION 3: WRITE INGREDIENT (Called by CollectionManager) ---
+    public void AddIngredientToDatabase(string mainCardName, string ingredientName)
+    {
+        if (string.IsNullOrEmpty(userID)) return;
+
+        // Saves a single ingredient as a simple boolean (true = collected)
+        dbReference.Child("users").Child(userID)
+                   .Child("collection")
+                   .Child(mainCardName)
+                   .Child("ingredients")
+                   .Child(ingredientName)
+                   .SetValueAsync(true)
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsCompleted)
+                {
+                    Debug.Log($"Success! Saved {ingredientName} under {mainCardName}.");
                     LoadUserCollection();
                 }
             });
     }
 
-    // --- READ FUNCTION (Updates the Collection UI) ---
+    // --- FUNCTION 4: READ FUNCTION (Updates the Collection UI) ---
     public void LoadUserCollection()
     {
         if (string.IsNullOrEmpty(userID)) return;
 
-        // Go to the user's specific folder
+        // Go to the user's specific collection folder
         dbReference.Child("users").Child(userID).Child("collection").GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
-                if (task.IsFaulted)
-                {
-                    Debug.LogError("Load failed: " + task.Exception);
-                    return;
-                }
+                if (task.IsFaulted || !task.Result.Exists) return;
 
-                // "Snapshot" contains all the data found at that path
-                DataSnapshot snapshot = task.Result;
+                DataSnapshot collectionSnapshot = task.Result;
+
+                // Assuming your UI icons are named: PineappleTart_Flour, PineappleTart_Butter, etc.
 
                 // Loop through your UI Icons to check which ones are unlocked
                 foreach (GameObject icon in collectionIcons)
                 {
-                    // Check if the database has this specific card name
-                    if (snapshot.HasChild(icon.name))
+                    // Assuming "PineappleTart" is the main card name for simplicity
+                    DataSnapshot ingredientsSnapshot = collectionSnapshot.Child("PineappleTart").Child("ingredients");
+
+                    // Check if the database has this specific ingredient name and if its value is 'true'
+                    if (ingredientsSnapshot.HasChild(icon.name) && (bool)ingredientsSnapshot.Child(icon.name).Value)
                     {
-                        // UNLOCK IT! (Set Color to White/Full)
+                        // UNLOCK IT! (Value is true)
                         var img = icon.GetComponent<Image>();
                         if (img != null) img.color = Color.white;
                     }
                     else
                     {
-                        // LOCK IT! (Set Color to Dark Gray/Black)
+                        // LOCK IT! (Either missing, or value is false)
                         var img = icon.GetComponent<Image>();
                         if (img != null) img.color = Color.black;
                     }
                 }
             });
     }
+
+
 }
