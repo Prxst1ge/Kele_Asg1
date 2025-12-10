@@ -12,7 +12,10 @@ public class ImageTracker : MonoBehaviour
     [Header("Prefabs to spawn (name must match reference image name)")]
     [SerializeField] private GameObject[] placeablePrefabs;
 
+    [Header("Managers")]
     [SerializeField] private CollectionManager collectionManager;
+    [SerializeField] private PineapplePasteStageManager pineapplePasteStageManager;   // NEW
+
     // imageName -> prefab template
     private Dictionary<string, GameObject> prefabLookup =
         new Dictionary<string, GameObject>();
@@ -21,7 +24,6 @@ public class ImageTracker : MonoBehaviour
     private Dictionary<TrackableId, GameObject> spawnedByTrackableId =
         new Dictionary<TrackableId, GameObject>();
 
-    // optional: for other scripts that want to know which card was last seen
     public string currentVisibleCardName = "";
 
     void Awake()
@@ -29,7 +31,6 @@ public class ImageTracker : MonoBehaviour
         if (trackedImageManager == null)
             trackedImageManager = GetComponent<ARTrackedImageManager>();
 
-        // build lookup from prefab name -> prefab
         prefabLookup.Clear();
         foreach (GameObject prefab in placeablePrefabs)
         {
@@ -38,8 +39,6 @@ public class ImageTracker : MonoBehaviour
             string key = prefab.name;
             if (!prefabLookup.ContainsKey(key))
                 prefabLookup.Add(key, prefab);
-            else
-                Debug.LogWarning($"[ImageTracker] Duplicate prefab name '{key}' in placeablePrefabs.");
         }
     }
 
@@ -57,23 +56,14 @@ public class ImageTracker : MonoBehaviour
 
     void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
     {
-        // New images detected
         foreach (ARTrackedImage trackedImage in args.added)
-        {
             CreateInstanceFor(trackedImage);
-        }
 
-        // Existing images updated (pose / tracking state)
         foreach (ARTrackedImage trackedImage in args.updated)
-        {
             UpdateInstanceFor(trackedImage);
-        }
 
-        // Images lost
         foreach (ARTrackedImage trackedImage in args.removed)
-        {
             RemoveInstanceFor(trackedImage);
-        }
     }
 
     void CreateInstanceFor(ARTrackedImage trackedImage)
@@ -82,21 +72,39 @@ public class ImageTracker : MonoBehaviour
 
         string imageName = trackedImage.referenceImage.name;
 
+        // -----------------------------------------------------
+        // UPDATED — Validate only, do NOT count yet.
+        // -----------------------------------------------------
+        if (pineapplePasteStageManager != null)
+        {
+            bool allowed = pineapplePasteStageManager.ValidateCard(imageName);
+            if (!allowed)
+            {
+                Debug.Log($"[ImageTracker] Card '{imageName}' is not valid for this stage.");
+                return;
+            }
+        }
+
         if (!prefabLookup.TryGetValue(imageName, out GameObject prefab))
         {
             Debug.LogWarning($"[ImageTracker] No prefab found for image '{imageName}'.");
             return;
         }
 
-        // spawn a NEW instance for this specific detected image
-        GameObject instance = Instantiate(prefab,
+        GameObject instance = Instantiate(
+            prefab,
             trackedImage.transform.position,
-            trackedImage.transform.rotation);
+            trackedImage.transform.rotation
+        );
 
-        // parent to the tracked image so it follows the card
         instance.transform.SetParent(trackedImage.transform);
-
         spawnedByTrackableId[trackedImage.trackableId] = instance;
+
+        // -----------------------------------------------------
+        // UPDATED — Link AddToRecipe button to IngredientController,
+        // NOT directly to CollectionManager.
+        // -----------------------------------------------------
+        LinkAddButtonToIngredientController(instance);
 
         currentVisibleCardName = imageName;
     }
@@ -108,7 +116,6 @@ public class ImageTracker : MonoBehaviour
         if (!spawnedByTrackableId.TryGetValue(trackedImage.trackableId, out GameObject instance))
             return;
 
-        // enable / disable based on tracking state
         bool isTracking = trackedImage.trackingState == TrackingState.Tracking;
         instance.SetActive(isTracking);
 
@@ -126,32 +133,36 @@ public class ImageTracker : MonoBehaviour
             spawnedByTrackableId.Remove(trackedImage.trackableId);
         }
 
-        // if we just lost the last card of that type, you can optionally clear
         if (currentVisibleCardName == trackedImage.referenceImage.name)
             currentVisibleCardName = "";
     }
 
-    void LinkButtonToManager(GameObject spawnedPrefab, string cardName)
+    // -----------------------------------------------------
+    // UPDATED — New linking method
+    // Finds IngredientController → finds AddToRecipe button → connects everything.
+    // -----------------------------------------------------
+    void LinkAddButtonToIngredientController(GameObject spawnedPrefab)
     {
-        // 1. Find the button component inside the spawned prefab
-        // We use GetComponentInChildren to find the button nested deep inside your Prefab.
-        // NOTE: The button must be named exactly "Add to Recipe_Button" for this to work.
-        Button addButton = spawnedPrefab.GetComponentInChildren<Button>();
+        IngredientController controller = spawnedPrefab.GetComponentInChildren<IngredientController>();
 
-        if (addButton != null && collectionManager != null)
+        if (controller == null)
         {
-            // 2. Remove any old events (crucial for cleaning up prefabs)
-            addButton.onClick.RemoveAllListeners();
+            Debug.LogWarning("[ImageTracker] No IngredientController found in prefab.");
+            return;
+        }
 
-            // 3. Link the button's OnClick event to the CollectionManager function
-            // The CollectionManager reads the currently visible card name, so we just call the function.
-            addButton.onClick.AddListener(collectionManager.OnAddButtonPressed);
-        }
-        else
+        Button[] buttons = spawnedPrefab.GetComponentsInChildren<Button>(true);
+
+        foreach (Button b in buttons)
         {
-            // This warning helps diagnose if the button name is wrong or the reference is missing.
-            Debug.LogWarning($"Failed to link button in prefab for {cardName}. Check button name or CollectionManager reference.");
+            if (b.name.Contains("Add"))
+            {
+                b.onClick.RemoveAllListeners();
+                b.onClick.AddListener(controller.AddToRecipe);
+                return;
+            }
         }
+
+        Debug.LogWarning("[ImageTracker] Could not find 'Add to Recipe' button in prefab.");
     }
-
 }

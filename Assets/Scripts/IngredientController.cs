@@ -12,9 +12,9 @@ public class IngredientController : MonoBehaviour
     [SerializeField] GameObject addedTickIcon;     // per-ingredient tick (optional)
 
     [Header("Global Progress UI")]
-    [SerializeField] TMP_Text globalStatusText;    // shared popup text (e.g. "1/3 ingredients added")
+    [SerializeField] TMP_Text globalStatusText;    
     [SerializeField] int totalIngredients = 3;
-    [SerializeField] float popupDuration = 1.5f;   // seconds
+    [SerializeField] float popupDuration = 1.5f;
 
     [Header("Rotation")]
     [SerializeField] float rotationSpeed = 45f;
@@ -31,7 +31,7 @@ public class IngredientController : MonoBehaviour
         }
     }
 
-    // Called by Rotate button
+    // ------------------- ROTATE -------------------
     public void ToggleRotate()
     {
         if (ingredientModel == null)
@@ -44,10 +44,10 @@ public class IngredientController : MonoBehaviour
         Debug.Log($"[Ingredient] Rotate toggle for {ingredientId}: {isRotating}");
     }
 
-    // Called by Add to Recipe button
+    // ------------------ ADD TO RECIPE ------------------
     public void AddToRecipe()
     {
-        // If already added, just show "already added" popup
+        // If already added, show popup and stop
         if (isAdded)
         {
             ShowGlobalMessage("Ingredient already added.");
@@ -55,32 +55,42 @@ public class IngredientController : MonoBehaviour
             return;
         }
 
-        // Mark as added first time
+        // 🔥 NEW PART — ask stage manager if allowed
+        if (PineapplePasteStageManager.Instance != null)
+        {
+            bool accepted = PineapplePasteStageManager.Instance.RegisterIngredient(ingredientId);
+
+            if (!accepted)
+            {
+                // Stage rejected this ingredient → do NOT add anything here
+                Debug.Log($"[Ingredient] Stage rejected ingredient: {ingredientId}");
+                return;
+            }
+        }
+
+        // Mark as added FIRST TIME
         isAdded = true;
         IngredientProgressManager.MarkAdded(ingredientId);
 
-        // Optional per-ingredient UI
         if (statusText != null)
             statusText.text = "Added to recipe!";
 
         if (addedTickIcon != null)
             addedTickIcon.SetActive(true);
 
-        // Stop rotation when added (optional)
         isRotating = false;
 
-        // Little pop effect on the model
         if (ingredientModel != null)
             StartCoroutine(PopEffect(ingredientModel));
 
-        // Global message: X / total ingredients
         int addedCount = IngredientProgressManager.GetAddedCount();
         string msg = $"{addedCount}/{totalIngredients} ingredients added.";
         ShowGlobalMessage(msg);
 
-        Debug.Log($"[Ingredient] {ingredientId} added to recipe. Now {addedCount}/{totalIngredients}");
+        Debug.Log($"[Ingredient] {ingredientId} added to recipe.");
     }
 
+    // ---------------- UI POPUP --------------------
     void ShowGlobalMessage(string message)
     {
         if (globalStatusText == null) return;

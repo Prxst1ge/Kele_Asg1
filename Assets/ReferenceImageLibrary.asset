@@ -47,3 +47,13 @@ MonoBehaviour:
     m_SpecifySize: 1
     m_Name: Butter_Ingredient
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 4924832990256819447
+      m_GuidHigh: 6714218304058795144
+    m_SerializedTextureGuid:
+      m_GuidLow: 13007602410035221825
+      m_GuidHigh: 3282970406823778458
+    m_Size: {x: 0.063, y: 0.094500005}
+    m_SpecifySize: 1
+    m_Name: Lemon_Ingredient
+    m_Texture: {fileID: 0}
