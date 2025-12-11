@@ -17,6 +17,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene 1.unity
     guid: 7e791e74fbcf0e74ead18b27add88672
+  - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 9c539163cb4147b45a5d4d7628004acc
+  - enabled: 1
+    path: Assets/Scenes/ARScannerChoice.unity
+    guid: 7adccbd77a4558042aa9a126b0aa6ded
+  - enabled: 1
+    path: Assets/Scenes/PineapplePaste_AR.unity
+    guid: 033576c2b238dee488600221ae70e300
+  - enabled: 1
+    path: Assets/Scenes/Biscuit_AR.unity
+    guid: ba7179548d5db824fb9e026b05b90269
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 6ee72d15cf39dd748a13eac57397b9af, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 0465d33c6aee55f44b0237db8b0e0259, type: 2}

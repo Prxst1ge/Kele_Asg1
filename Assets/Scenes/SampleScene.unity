@@ -3273,7 +3273,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b9d1357947a2be4ab91847de0fb028c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  imageTracker: {fileID: 433576168}
+  imageTracker: {fileID: 1802248381}
   dbManager: {fileID: 1173326382}
 --- !u!4 &818423514
 Transform:

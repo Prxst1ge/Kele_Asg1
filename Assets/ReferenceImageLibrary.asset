@@ -57,3 +57,23 @@ MonoBehaviour:
     m_SpecifySize: 1
     m_Name: Lemon_Ingredient
     m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5206176351770021841
+      m_GuidHigh: 7355057504472804534
+    m_SerializedTextureGuid:
+      m_GuidLow: 11269390857392270395
+      m_GuidHigh: 14401775284681585961
+    m_Size: {x: 0.063, y: 0.094500005}
+    m_SpecifySize: 1
+    m_Name: Sugar_Ingredient
+    m_Texture: {fileID: 0}
+  - m_SerializedGuid:
+      m_GuidLow: 5234914732184067086
+      m_GuidHigh: 12548739891074573209
+    m_SerializedTextureGuid:
+      m_GuidLow: 11589067349094872874
+      m_GuidHigh: 2908104596171289128
+    m_Size: {x: 0.063, y: 0.094500005}
+    m_SpecifySize: 1
+    m_Name: Water_Ingredient
+    m_Texture: {fileID: 0}

@@ -5,6 +5,7 @@ using TMPro;
 public class IngredientController : MonoBehaviour
 {
     [Header("Setup")]
+    public string IngredientId => ingredientId;
     [SerializeField] string ingredientId = "pineapple";
     
     [SerializeField] Transform ingredientModel;
@@ -64,6 +65,17 @@ public class IngredientController : MonoBehaviour
             {
                 // Stage rejected this ingredient → do NOT add anything here
                 Debug.Log($"[Ingredient] Stage rejected ingredient: {ingredientId}");
+                return;
+            }
+        }
+
+        // Biscuit stage support (only does something in Biscuit_AR scene)
+        if (BiscuitStageManager.Instance != null)
+        {
+            bool acceptedBiscuit = BiscuitStageManager.Instance.RegisterIngredient(ingredientId);
+            if (!acceptedBiscuit)
+            {
+                Debug.Log($"[Ingredient] Biscuit stage rejected ingredient: {ingredientId}");
                 return;
             }
         }
