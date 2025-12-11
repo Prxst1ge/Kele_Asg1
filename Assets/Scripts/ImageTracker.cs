@@ -14,14 +14,14 @@ public class ImageTracker : MonoBehaviour
 
     [Header("Managers")]
     [SerializeField] private CollectionManager collectionManager;
-    [SerializeField] private PineapplePasteStageManager pineapplePasteStageManager;   // NEW
+    [SerializeField] private PineapplePasteStageManager pineapplePasteStageManager;
 
     // imageName -> prefab template
-    private Dictionary<string, GameObject> prefabLookup =
+    private readonly Dictionary<string, GameObject> prefabLookup =
         new Dictionary<string, GameObject>();
 
     // each tracked image (unique ID) -> spawned instance
-    private Dictionary<TrackableId, GameObject> spawnedByTrackableId =
+    private readonly Dictionary<TrackableId, GameObject> spawnedByTrackableId =
         new Dictionary<TrackableId, GameObject>();
 
     public string currentVisibleCardName = "";
@@ -66,15 +66,16 @@ public class ImageTracker : MonoBehaviour
             RemoveInstanceFor(trackedImage);
     }
 
+    // ------------------------------------------------------------------
+    //  Spawn a prefab for this specific tracked image
+    // ------------------------------------------------------------------
     void CreateInstanceFor(ARTrackedImage trackedImage)
     {
         if (trackedImage == null) return;
 
         string imageName = trackedImage.referenceImage.name;
 
-        // -----------------------------------------------------
-        // UPDATED — Validate only, do NOT count yet.
-        // -----------------------------------------------------
+        // 1. Stage validation (only blocks non-stage cards, no counting)
         if (pineapplePasteStageManager != null)
         {
             bool allowed = pineapplePasteStageManager.ValidateCard(imageName);
@@ -85,26 +86,25 @@ public class ImageTracker : MonoBehaviour
             }
         }
 
+        // 2. Get prefab template
         if (!prefabLookup.TryGetValue(imageName, out GameObject prefab))
         {
             Debug.LogWarning($"[ImageTracker] No prefab found for image '{imageName}'.");
             return;
         }
 
+        // 3. Instantiate and parent to tracked image
         GameObject instance = Instantiate(
             prefab,
             trackedImage.transform.position,
             trackedImage.transform.rotation
         );
-
         instance.transform.SetParent(trackedImage.transform);
+
         spawnedByTrackableId[trackedImage.trackableId] = instance;
 
-        // -----------------------------------------------------
-        // UPDATED — Link AddToRecipe button to IngredientController,
-        // NOT directly to CollectionManager.
-        // -----------------------------------------------------
-        LinkAddButtonToIngredientController(instance);
+        // 4. Wire up the Add button → IngredientController + CollectionManager
+        LinkAddButton(instance, imageName);
 
         currentVisibleCardName = imageName;
     }
@@ -137,32 +137,62 @@ public class ImageTracker : MonoBehaviour
             currentVisibleCardName = "";
     }
 
-    // -----------------------------------------------------
-    // UPDATED — New linking method
-    // Finds IngredientController → finds AddToRecipe button → connects everything.
-    // -----------------------------------------------------
-    void LinkAddButtonToIngredientController(GameObject spawnedPrefab)
+    // ------------------------------------------------------------------
+    //  Link Add-to-Recipe button: IngredientController + CollectionManager
+    // ------------------------------------------------------------------
+    void LinkAddButton(GameObject spawnedPrefab, string cardName)
     {
-        IngredientController controller = spawnedPrefab.GetComponentInChildren<IngredientController>();
+        // Find IngredientController on this prefab
+        IngredientController controller =
+            spawnedPrefab.GetComponentInChildren<IngredientController>();
 
-        if (controller == null)
-        {
-            Debug.LogWarning("[ImageTracker] No IngredientController found in prefab.");
-            return;
-        }
-
+        // Find the first Button in children (your Add to Recipe button)
+        Button addButton = null;
         Button[] buttons = spawnedPrefab.GetComponentsInChildren<Button>(true);
-
-        foreach (Button b in buttons)
+        foreach (var b in buttons)
         {
-            if (b.name.Contains("Add"))
+            if (b.name.Contains("Add"))     // e.g. "Add to Recipe_Button"
             {
-                b.onClick.RemoveAllListeners();
-                b.onClick.AddListener(controller.AddToRecipe);
-                return;
+                addButton = b;
+                break;
             }
         }
 
-        Debug.LogWarning("[ImageTracker] Could not find 'Add to Recipe' button in prefab.");
+        if (addButton == null)
+        {
+            Debug.LogWarning($"[ImageTracker] Could not find 'Add' button in prefab for {cardName}.");
+            return;
+        }
+
+        // Clear old listeners to avoid duplicates
+        addButton.onClick.RemoveAllListeners();
+
+        // 1) Game-side logic: rotation, per-ingredient UI, stage progress, etc.
+        if (controller != null)
+        {
+            addButton.onClick.AddListener(controller.AddToRecipe);
+        }
+        else
+        {
+            Debug.LogWarning($"[ImageTracker] No IngredientController found in prefab for {cardName}.");
+        }
+
+        // 2) Collection / Firebase logic
+        if (collectionManager != null)
+        {
+            // If your CollectionManager uses a card name parameter:
+            addButton.onClick.AddListener(
+                () => collectionManager.OnUnlockSpecificIngredient(cardName)
+            );
+
+            // If instead you use OnAddButtonPressed() with currentVisibleCardName,
+            // then use this line instead and remove the one above:
+            // addButton.onClick.AddListener(collectionManager.OnAddButtonPressed);
+        }
+        else
+        {
+            Debug.LogWarning("[ImageTracker] collectionManager reference is missing.");
+        }
     }
 }
+
