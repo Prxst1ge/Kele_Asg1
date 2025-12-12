@@ -1350,8 +1350,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b9d1357947a2be4ab91847de0fb028c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  imageTracker: {fileID: 0}
-  dbManager: {fileID: 0}
+  imageTracker: {fileID: 866543881}
+  dbManager: {fileID: 690622827}
 --- !u!4 &268557575
 Transform:
   m_ObjectHideFlags: 0

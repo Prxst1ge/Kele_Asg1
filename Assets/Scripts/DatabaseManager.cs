@@ -30,15 +30,15 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // --- NEW MASTER RECIPE STRUCTURE ---
+    // --- MASTER RECIPE STRUCTURE ---
     // Defines the full hierarchy: Component -> List of Ingredients
     private static readonly Dictionary<string, List<string>> MasterRecipeStructure =
         new Dictionary<string, List<string>>
     {
         // Component 1
-        {"PineapplePaste", new List<string> {"Pineapple", "Lemon", "Sugar"}},
+        {"PineapplePaste", new List<string> {"Pineapple_Ingredient", "Lemon_Ingredient", "Sugar_Ingredient"}},
         // Component 2
-        {"Biscuit", new List<string> {"Butter", "Flour", "Water"}}
+        {"Biscuit", new List<string> {"Butter_Ingredient", "Flour_Ingredient", "Water_Ingredient"}}
     };
 
 
@@ -120,7 +120,124 @@ public class DatabaseManager : MonoBehaviour
                 if (task.IsCompleted)
                 {
                     Debug.Log($"Success! Saved {ingredientName} under {componentToSaveTo}.");
+                    CheckComponentCompletion(mainCardName, componentToSaveTo);
                     LoadUserCollection();
+                }
+            });
+    }
+
+    public void StartComponentTimer(string componentName)
+    {
+        if (string.IsNullOrEmpty(userID)) return;
+        
+        string componentPath = $"users/{userID}/collection/PineappleTart/{componentName}";
+        string timerPath = $"{componentPath}/timer";
+
+        // 1. Check current timer status before proceeding
+        dbReference.Child(componentPath).GetValueAsync()
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || !task.Result.Exists)
+                {
+                    Debug.LogError($"Error retrieving component data for timer: {componentName}");
+                    return;
+                }
+
+                DataSnapshot timerSnapshot = task.Result.Child("timer");
+                bool timerExists = timerSnapshot.Child("startTime").Exists;
+                bool isAlreadyComplete = timerSnapshot.Child("isComplete").Exists && (bool)timerSnapshot.Child("isComplete").Value;
+
+                // --- CHECK 1: IS THE TIMER ALREADY RUNNING? ---
+                // If the start time exists AND the hunt is NOT complete, DO NOTHING.
+                if (timerExists && !isAlreadyComplete)
+                {
+                    Debug.Log($"Timer for {componentName} is already running. Action skipped.");
+                    return;
+                }
+
+                // --- CHECK 2: TIMER NEEDS TO BE STARTED/RESET ---
+                // If timer doesn't exist OR it was previously finished, start a new one.
+                
+                string startTime = DateTime.UtcNow.ToString("o"); 
+                
+                // Batch the writes for efficiency
+                Dictionary<string, object> updates = new Dictionary<string, object>
+                {
+                    {"startTime", startTime},
+                    {"isComplete", false},
+                    {"durationSeconds", null} // Removes the old duration
+                };
+
+                dbReference.Child(timerPath).UpdateChildrenAsync(updates)
+                    .ContinueWithOnMainThread(updateTask =>
+                    {
+                        if (updateTask.IsCompleted)
+                        {
+                            Debug.Log($"Timer successfully STARTED/RESET for {componentName} at {startTime}");
+                        }
+                    });
+            });
+    }
+    private void CheckComponentCompletion(string mainCardName, string componentName)
+    {
+        if (string.IsNullOrEmpty(userID)) return;
+
+        string componentPath = $"users/{userID}/collection/{mainCardName}/{componentName}";
+
+        dbReference.Child(componentPath).GetValueAsync()
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || !task.Result.Exists) return;
+
+                DataSnapshot componentData = task.Result;
+                
+                // Safety check: Has the timer already been completed?
+                if (componentData.Child("timer").Child("isComplete").Exists && (bool)componentData.Child("timer").Child("isComplete").Value)
+                {
+                    Debug.Log($"{componentName} already completed. Skipping check.");
+                    return;
+                }
+
+                // 1. Check if ALL ingredients are TRUE
+                bool allCollected = true;
+                foreach (string ingredient in MasterRecipeStructure[componentName]) 
+                {
+                    // We check if the ingredient node is missing OR if it's explicitly false
+                    if (!componentData.Child(ingredient).Exists || !(bool)componentData.Child(ingredient).Value)
+                    {
+                        allCollected = false;
+                        break;
+                    }
+                }
+
+                // 2. If FINISHED, calculate time and save results
+                if (allCollected)
+                {
+                    DataSnapshot timerSnapshot = componentData.Child("timer");
+                    
+                    // Ensure the startTime exists before calculating
+                    if (timerSnapshot.Child("startTime").Exists)
+                    {
+                        // Calculate Duration
+                        string startTimeStr = timerSnapshot.Child("startTime").Value.ToString();
+                        
+                        DateTime startTime = DateTime.Parse(startTimeStr).ToUniversalTime();
+                        DateTime finishTime = DateTime.UtcNow;
+                        
+                        TimeSpan duration = finishTime.Subtract(startTime);
+                        long durationSeconds = (long)duration.TotalSeconds;
+
+                        // Save Results to the timer node
+                        Dictionary<string, object> results = new Dictionary<string, object>
+                        {
+                            {"finishTime", finishTime.ToString("o")},
+                            {"durationSeconds", durationSeconds},
+                            {"isComplete", true}
+                        };
+
+                        dbReference.Child(componentPath).Child("timer").UpdateChildrenAsync(results);
+                        Debug.Log($"--- {componentName} Completed! Time: {durationSeconds} seconds ---");
+                    }
                 }
             });
     }

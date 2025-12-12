@@ -64,14 +64,14 @@ public class ImageTracker : MonoBehaviour
 
     void OnTrackedImagesChanged(ARTrackedImagesChangedEventArgs args)
     {
-        foreach (ARTrackedImage trackedImage in args.added)
-            CreateInstanceFor(trackedImage);
+        foreach (var img in args.added)
+            CreateInstanceFor(img);
 
-        foreach (ARTrackedImage trackedImage in args.updated)
-            UpdateInstanceFor(trackedImage);
+        foreach (var img in args.updated)
+            UpdateInstanceFor(img);
 
-        foreach (ARTrackedImage trackedImage in args.removed)
-            RemoveInstanceFor(trackedImage);
+        foreach (var img in args.removed)
+            RemoveInstanceFor(img);
     }
 
     // ------------------------------------------------------------------
