@@ -10,6 +10,9 @@ public class DatabaseManager : MonoBehaviour
 {
     private DatabaseReference dbReference;
     private string userID;
+    // Cache for counts loaded from Firebase so UI can query instantly
+    private Dictionary<string, Dictionary<string, int>> cachedCounts =
+        new Dictionary<string, Dictionary<string, int>>();
 
     // --- MASTER RECIPE STRUCTURE ---
     // Component -> Ingredients list
@@ -305,42 +308,55 @@ public class DatabaseManager : MonoBehaviour
     // -----------------------------------------
     // READ (treat any >0 as collected for UI lock)
     // -----------------------------------------
-    public void LoadUserCollection()
-    {
-        if (string.IsNullOrEmpty(userID)) return;
+public void LoadUserCollection()
+{
+    if (string.IsNullOrEmpty(userID)) return;
 
-        dbReference.Child("users").Child(userID).Child("collection").GetValueAsync()
-            .ContinueWithOnMainThread(task =>
+    dbReference.Child("users").Child(userID).Child("collection").GetValueAsync()
+        .ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted || task.Result == null || !task.Result.Exists) return;
+
+            DataSnapshot collectionSnapshot = task.Result;
+            DataSnapshot mainCardSnapshot = collectionSnapshot.Child("PineappleTart");
+
+            // 🔹 RESET CACHE
+            cachedCounts.Clear();
+
+            foreach (var componentEntry in MasterRecipeStructure)
             {
-                if (task.IsFaulted || task.Result == null || !task.Result.Exists) return;
+                string componentName = componentEntry.Key;
+                DataSnapshot ingredientsSnapshot = mainCardSnapshot.Child(componentName);
 
-                DataSnapshot collectionSnapshot = task.Result;
-                DataSnapshot mainCardSnapshot = collectionSnapshot.Child("PineappleTart");
+                // Create cache bucket for this component
+                cachedCounts[componentName] = new Dictionary<string, int>();
 
-                foreach (var componentEntry in MasterRecipeStructure)
+                foreach (string ingredientName in componentEntry.Value)
                 {
-                    string componentName = componentEntry.Key;
-                    DataSnapshot ingredientsSnapshot = mainCardSnapshot.Child(componentName);
+                    int count = 0;
+                    var ingSnap = ingredientsSnapshot.Child(ingredientName);
+                    if (ingSnap.Exists)
+                        count = ConvertDbValueToInt(ingSnap.Value);
 
-                    foreach (string ingredientName in componentEntry.Value)
-                    {
-                        GameObject icon = GameObject.Find(ingredientName);
-                        if (icon == null) continue;
+                    // 🔹 STORE IN CACHE
+                    cachedCounts[componentName][ingredientName] = count;
 
-                        int count = 0;
-                        var ingSnap = ingredientsSnapshot.Child(ingredientName);
-                        if (ingSnap.Exists)
-                            count = ConvertDbValueToInt(ingSnap.Value);
+                    // 🔹 EXISTING UI LOCK LOGIC (unchanged)
+                    GameObject icon = GameObject.Find(ingredientName);
+                    if (icon == null) continue;
 
-                        bool isCollected = count > 0;
+                    bool isCollected = count > 0;
 
-                        Transform lockPanel = icon.transform.Find("GreyLockPanel");
-                        if (lockPanel != null)
-                            lockPanel.gameObject.SetActive(!isCollected);
-                    }
+                    Transform lockPanel = icon.transform.Find("GreyLockPanel");
+                    if (lockPanel != null)
+                        lockPanel.gameObject.SetActive(!isCollected);
                 }
-            });
-    }
+            }
+
+            Debug.Log("[Database] User collection loaded & cache updated.");
+        });
+}
+
 
     // -----------------------------------------
     // Helpers
@@ -417,4 +433,34 @@ public class DatabaseManager : MonoBehaviour
                 Debug.Log($"[DB] Timer STOPPED for {componentName}. Duration: {durationSeconds}s");
             });
     }
+    public bool AreAllIngredientsCollected(string mainCardName = "PineappleTart")
+    {
+        // Biscuit
+        int butter = GetIngredientCount("Biscuit", "Butter_Ingredient", mainCardName);
+        int flour  = GetIngredientCount("Biscuit", "Flour_Ingredient",  mainCardName);
+        int water  = GetIngredientCount("Biscuit", "Water_Ingredient",  mainCardName);
+        int sugarB = GetIngredientCount("Biscuit", "Sugar_Ingredient",  mainCardName); // only if biscuit has sugar
+
+        // PineapplePaste
+        int sugarP = GetIngredientCount("PineapplePaste", "Sugar_Ingredient",     mainCardName);
+        int lemon  = GetIngredientCount("PineapplePaste", "Lemon_Ingredient",     mainCardName);
+        int pine   = GetIngredientCount("PineapplePaste", "Pineapple_Ingredient", mainCardName); // needs 2
+
+        bool sugarCollected = (sugarB + sugarP) >= 1;
+
+        return butter >= 1 &&
+            flour  >= 1 &&
+            water  >= 1 &&
+            sugarCollected &&
+            lemon  >= 1 &&
+            pine   >= 2;
+    }
+
+    public int GetIngredientCount(string componentName, string ingredientName, string mainCardName = "PineappleTart")
+    {
+        if (!cachedCounts.ContainsKey(componentName)) return 0;
+        if (!cachedCounts[componentName].ContainsKey(ingredientName)) return 0;
+        return cachedCounts[componentName][ingredientName];
+    }
+
 }
