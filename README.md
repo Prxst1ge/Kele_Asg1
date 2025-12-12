@@ -85,18 +85,18 @@ This section explains the design choices for key areas of the application:
 
 ## 5. 💻 Tech Stack (Technologies Used)
 
- Technology  Purpose in Project 
- :---  :--- 
- **Unity 3D**  The primary cross-platform engine used to build the AR application and manage all game assets, physics, and UI rendering. 
- **C#**  The core programming language used to develop all game logic, handle database communication, and manage complex flow control or to add intereaction like rotations for the game objects. 
- **Firebase Realtime DB**  Selected as the cloud-based backend to store volatile user data, track immutable start times, and synchronize real-time collection counts (scores). 
- **Firebase Authentication**  Used to manage secure user sign-up and login, ensuring all user data stored in the database is correctly scoped by a unique User ID. 
- **AR Foundation**  The Unity package used to enable cross-platform Augmented Reality capabilities, facilitating image tracking for scanning ingredient cards and displaying virtual prefabs. 
- **GitHub**  Used for version control (Git) to track changes, manage the project's history, and collaborate with teammates by allowing synchronized pushing and pulling of code.
+| Technology | Purpose in Project |
+| :--- | :--- |
+| **Unity 3D** | The primary cross-platform engine used to build the AR application and manage all game assets, physics, and UI rendering. |
+| **C#** | The core programming language used to develop all game logic, handle database communication, and manage complex flow control or to add intereaction like rotations for the game objects. |
+| **Firebase Realtime DB** | Selected as the cloud-based backend to store volatile user data, track immutable start times, and synchronize real-time collection counts (scores). |
+| **Firebase Authentication** | Used to manage secure user sign-up and login, ensuring all user data stored in the database is correctly scoped by a unique User ID. |
+| **AR Foundation** | The Unity package used to enable cross-platform Augmented Reality capabilities, facilitating image tracking for scanning ingredient cards and displaying virtual prefabs. |
+| **GitHub** | Used for version control (Git) to track changes, manage the project's history, and collaborate with teammates by allowing synchronized pushing and pulling of code.
 
 ## 6. ✨ Key Features
 
-### Existing Features 
+### Existing Features |
 
 
  **User-friendly Auth Errors**  **Secure User Authentication & Profile Integrity:** Implements Firebase Authentication... Provides user-friendly feedback and error handling for common issues like weak passwords or invalid credentials.  
