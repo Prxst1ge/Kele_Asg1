@@ -2,17 +2,45 @@ using UnityEngine;
 using Firebase.Database;
 using Firebase.Auth;
 using Firebase.Extensions;
-using UnityEngine.UI;
 using System.Collections.Generic;
-using System; // Required for Action<bool> callback
+using System;
+using System.Linq;
 
 public class DatabaseManager : MonoBehaviour
 {
     private DatabaseReference dbReference;
     private string userID;
 
-    [Header("Collection UI")]
-    public GameObject[] collectionIcons;
+    // --- MASTER RECIPE STRUCTURE ---
+    // Component -> Ingredients list
+    private static readonly Dictionary<string, List<string>> MasterRecipeStructure =
+        new Dictionary<string, List<string>>
+    {
+        {"PineapplePaste", new List<string> {"Pineapple_Ingredient", "Lemon_Ingredient", "Sugar_Ingredient"}},
+        {"Biscuit",        new List<string> {"Butter_Ingredient", "Flour_Ingredient", "Water_Ingredient"}}
+    };
+
+    // --- REQUIRED COUNTS ---
+    // Component -> (Ingredient -> required count)
+    private static readonly Dictionary<string, Dictionary<string, int>> RequiredCounts =
+        new Dictionary<string, Dictionary<string, int>>
+    {
+        { "PineapplePaste", new Dictionary<string, int>
+            {
+                { "Pineapple_Ingredient", 2 },
+                { "Sugar_Ingredient", 1 },
+                { "Lemon_Ingredient", 1 }
+            }
+        },
+        { "Biscuit", new Dictionary<string, int>
+            {
+                { "Flour_Ingredient", 2 },
+                { "Butter_Ingredient", 1 },
+                { "Sugar_Ingredient", 1 },  // if you use sugar in biscuit stage
+                { "Water_Ingredient", 1 }
+            }
+        }
+    };
 
     void Start()
     {
@@ -21,7 +49,6 @@ public class DatabaseManager : MonoBehaviour
         if (FirebaseAuth.DefaultInstance.CurrentUser != null)
         {
             userID = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-            // Load data for existing users after login
             LoadUserCollection();
         }
         else
@@ -30,154 +57,184 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    // --- MASTER RECIPE STRUCTURE ---
-    // Defines the full hierarchy: Component -> List of Ingredients
-    private static readonly Dictionary<string, List<string>> MasterRecipeStructure =
-        new Dictionary<string, List<string>>
-    {
-        // Component 1
-        {"PineapplePaste", new List<string> {"Pineapple_Ingredient", "Lemon_Ingredient", "Sugar_Ingredient"}},
-        // Component 2
-        {"Biscuit", new List<string> {"Butter_Ingredient", "Flour_Ingredient", "Water_Ingredient"}}
-    };
-
-
-    // --- FUNCTION 1: INITIALIZE PROFILE (Builds the Nested Structure) ---
+    // ----------------------------
+    // PROFILE CREATION (ints = 0)
+    // ----------------------------
     public void CreateNewUserProfile(string userId, string initialMainCard)
     {
         Dictionary<string, object> cardChecklist = new Dictionary<string, object>();
 
-        // Loop through each component (PineapplePaste, Biscuit)
         foreach (var componentEntry in MasterRecipeStructure)
         {
             Dictionary<string, object> ingredientChecklist = new Dictionary<string, object>();
 
-            // Loop through ingredients in the component
             foreach (string ingredient in componentEntry.Value)
             {
-                ingredientChecklist.Add(ingredient, false);
+                // IMPORTANT: store as COUNT
+                ingredientChecklist.Add(ingredient, 0);
             }
 
-            // Add the component and its ingredient list (all false) to the main checklist
+            // timer node (optional, but keeps structure consistent)
+            ingredientChecklist["timer"] = new Dictionary<string, object>
+            {
+                {"startTime", null},
+                {"finishTime", null},
+                {"durationSeconds", null},
+                {"isComplete", false}
+            };
+
             cardChecklist.Add(componentEntry.Key, ingredientChecklist);
         }
 
-        // The entire path where the components will be saved
         DatabaseReference pathReference = dbReference.Child("users").Child(userId)
-                                                    .Child("collection")
-                                                    .Child(initialMainCard); // PineppleTart -> Components
+            .Child("collection")
+            .Child(initialMainCard);
 
-        // Write the entire nested structure in one go
         pathReference.SetValueAsync(cardChecklist);
 
-        Debug.Log($"Created full nested profile for user {userId}.");
+        Debug.Log($"Created full nested profile (COUNT-based) for user {userId}.");
     }
 
-    // --- FUNCTION 2: PROFILE EXISTENCE CHECK (unchanged) ---
     public void CheckIfProfileExists(string userId, Action<bool> callback)
     {
-        // Check for the existence of the 'collection' node under the UserID
         dbReference.Child("users").Child(userId).Child("collection").GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
-                // ... [Existing check logic] ...
-                bool profileExists = task.Result.Exists;
+                bool profileExists = task.Result != null && task.Result.Exists;
                 callback(profileExists);
             });
     }
 
-    // --- FUNCTION 3: WRITE INGREDIENT (Writes to the Correct Component) ---
+    // -----------------------------------------
+    // ADD INGREDIENT (increment with transaction)
+    // -----------------------------------------
     public void AddIngredientToDatabase(string mainCardName, string ingredientName)
     {
         if (string.IsNullOrEmpty(userID)) return;
 
-        string componentToSaveTo = "";
-
-        // Determine the component based on the ingredient name
-        if (MasterRecipeStructure["PineapplePaste"].Contains(ingredientName))
-        {
-            componentToSaveTo = "PineapplePaste";
-        }
-        else if (MasterRecipeStructure["Biscuit"].Contains(ingredientName))
-        {
-            componentToSaveTo = "Biscuit";
-        }
-        else
+        string componentToSaveTo = GetComponentForIngredient(ingredientName);
+        if (string.IsNullOrEmpty(componentToSaveTo))
         {
             Debug.LogError($"Ingredient '{ingredientName}' not found in any component! Cannot save.");
             return;
         }
 
-        // Saves a single ingredient as a simple boolean (true = collected)
-        dbReference.Child("users").Child(userID)
-                   .Child("collection")
-                   .Child(mainCardName) // PineappleTart
-                   .Child(componentToSaveTo) // PineapplePaste OR Biscuit
-                   .Child(ingredientName)
-                   .SetValueAsync(true)
-            .ContinueWithOnMainThread(task =>
+        int required = GetRequiredCount(componentToSaveTo, ingredientName);
+
+        DatabaseReference ingredientRef = dbReference.Child("users").Child(userID)
+            .Child("collection")
+            .Child(mainCardName)
+            .Child(componentToSaveTo)
+            .Child(ingredientName);
+
+        ingredientRef.RunTransaction(mutableData =>
+        {
+            int current = ConvertDbValueToInt(mutableData.Value);
+
+            // Clamp so spam-click can’t exceed requirement (extra safe)
+            if (required > 0 && current >= required)
             {
-                if (task.IsCompleted)
-                {
-                    Debug.Log($"Success! Saved {ingredientName} under {componentToSaveTo}.");
-                    CheckComponentCompletion(mainCardName, componentToSaveTo);
-                    LoadUserCollection();
-                }
-            });
+                return TransactionResult.Success(mutableData);
+            }
+
+            current += 1;
+            mutableData.Value = current;
+
+            return TransactionResult.Success(mutableData);
+        })
+        .ContinueWithOnMainThread(task =>
+        {
+            if (task.IsFaulted)
+            {
+                Debug.LogError($"[DB] Failed increment for {ingredientName}: {task.Exception}");
+                return;
+            }
+
+            if (task.IsCompleted)
+            {
+                Debug.Log($"[DB] Incremented {ingredientName} under {componentToSaveTo}.");
+                CheckComponentCompletion(mainCardName, componentToSaveTo);
+                LoadUserCollection();
+            }
+        });
     }
 
+    // -----------------------------------------
+    // TIMER START = ALSO RESET COUNTS TO 0
+    // -----------------------------------------
     public void StartComponentTimer(string componentName)
     {
         if (string.IsNullOrEmpty(userID)) return;
-        
+
         string componentPath = $"users/{userID}/collection/PineappleTart/{componentName}";
         string timerPath = $"{componentPath}/timer";
 
-        // 1. Check current timer status before proceeding
         dbReference.Child(componentPath).GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
-                if (task.IsFaulted || !task.Result.Exists)
+                if (task.IsFaulted || task.Result == null || !task.Result.Exists)
                 {
                     Debug.LogError($"Error retrieving component data for timer: {componentName}");
                     return;
                 }
 
                 DataSnapshot timerSnapshot = task.Result.Child("timer");
-                bool timerExists = timerSnapshot.Child("startTime").Exists;
-                bool isAlreadyComplete = timerSnapshot.Child("isComplete").Exists && (bool)timerSnapshot.Child("isComplete").Value;
+                bool timerExists = timerSnapshot.Child("startTime").Exists && timerSnapshot.Child("startTime").Value != null;
+                bool isAlreadyComplete = timerSnapshot.Child("isComplete").Exists && timerSnapshot.Child("isComplete").Value != null
+                    && (bool)timerSnapshot.Child("isComplete").Value;
 
-                // --- CHECK 1: IS THE TIMER ALREADY RUNNING? ---
-                // If the start time exists AND the hunt is NOT complete, DO NOTHING.
+                // If running and NOT complete, do nothing
                 if (timerExists && !isAlreadyComplete)
                 {
                     Debug.Log($"Timer for {componentName} is already running. Action skipped.");
                     return;
                 }
 
-                // --- CHECK 2: TIMER NEEDS TO BE STARTED/RESET ---
-                // If timer doesn't exist OR it was previously finished, start a new one.
-                
-                string startTime = DateTime.UtcNow.ToString("o"); 
-                
-                // Batch the writes for efficiency
+                // ✅ Reset ingredient counts when starting/resetting the stage
+                ResetComponentCounts("PineappleTart", componentName);
+
+                string startTime = DateTime.UtcNow.ToString("o");
+
                 Dictionary<string, object> updates = new Dictionary<string, object>
                 {
                     {"startTime", startTime},
+                    {"finishTime", null},
                     {"isComplete", false},
-                    {"durationSeconds", null} // Removes the old duration
+                    {"durationSeconds", null}
                 };
 
                 dbReference.Child(timerPath).UpdateChildrenAsync(updates)
                     .ContinueWithOnMainThread(updateTask =>
                     {
                         if (updateTask.IsCompleted)
-                        {
-                            Debug.Log($"Timer successfully STARTED/RESET for {componentName} at {startTime}");
-                        }
+                            Debug.Log($"Timer STARTED/RESET for {componentName} at {startTime}");
                     });
             });
     }
+
+    private void ResetComponentCounts(string mainCardName, string componentName)
+    {
+        if (!MasterRecipeStructure.ContainsKey(componentName)) return;
+
+        string componentPath = $"users/{userID}/collection/{mainCardName}/{componentName}";
+
+        Dictionary<string, object> updates = new Dictionary<string, object>();
+        foreach (string ing in MasterRecipeStructure[componentName])
+        {
+            updates[ing] = 0;
+        }
+
+        dbReference.Child(componentPath).UpdateChildrenAsync(updates)
+            .ContinueWithOnMainThread(t =>
+            {
+                if (t.IsCompleted)
+                    Debug.Log($"[DB] Reset counts to 0 for {componentName}");
+            });
+    }
+
+    // -----------------------------------------
+    // COMPLETION CHECK (counts vs required)
+    // -----------------------------------------
     private void CheckComponentCompletion(string mainCardName, string componentName)
     {
         if (string.IsNullOrEmpty(userID)) return;
@@ -187,62 +244,67 @@ public class DatabaseManager : MonoBehaviour
         dbReference.Child(componentPath).GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
-                if (task.IsFaulted || !task.Result.Exists) return;
+                if (task.IsFaulted || task.Result == null || !task.Result.Exists) return;
 
                 DataSnapshot componentData = task.Result;
-                
-                // Safety check: Has the timer already been completed?
-                if (componentData.Child("timer").Child("isComplete").Exists && (bool)componentData.Child("timer").Child("isComplete").Value)
+
+                // If already completed, skip
+                if (componentData.Child("timer").Child("isComplete").Exists
+                    && componentData.Child("timer").Child("isComplete").Value != null
+                    && (bool)componentData.Child("timer").Child("isComplete").Value)
                 {
                     Debug.Log($"{componentName} already completed. Skipping check.");
                     return;
                 }
 
-                // 1. Check if ALL ingredients are TRUE
+                // Check required counts
                 bool allCollected = true;
-                foreach (string ingredient in MasterRecipeStructure[componentName]) 
+
+                foreach (string ingredient in MasterRecipeStructure[componentName])
                 {
-                    // We check if the ingredient node is missing OR if it's explicitly false
-                    if (!componentData.Child(ingredient).Exists || !(bool)componentData.Child(ingredient).Value)
+                    int required = GetRequiredCount(componentName, ingredient);
+                    int current = 0;
+
+                    var snap = componentData.Child(ingredient);
+                    if (snap.Exists)
+                        current = ConvertDbValueToInt(snap.Value);
+
+                    if (required > 0 && current < required)
                     {
                         allCollected = false;
                         break;
                     }
                 }
 
-                // 2. If FINISHED, calculate time and save results
-                if (allCollected)
+                if (!allCollected) return;
+
+                DataSnapshot timerSnapshot = componentData.Child("timer");
+                if (!timerSnapshot.Child("startTime").Exists || timerSnapshot.Child("startTime").Value == null) return;
+
+                string startTimeStr = timerSnapshot.Child("startTime").Value.ToString();
+
+                DateTime startTime = DateTime.Parse(startTimeStr).ToUniversalTime();
+                DateTime finishTime = DateTime.UtcNow;
+
+                TimeSpan duration = finishTime.Subtract(startTime);
+                long durationSeconds = (long)duration.TotalSeconds;
+
+
+                Dictionary<string, object> results = new Dictionary<string, object>
                 {
-                    DataSnapshot timerSnapshot = componentData.Child("timer");
-                    
-                    // Ensure the startTime exists before calculating
-                    if (timerSnapshot.Child("startTime").Exists)
-                    {
-                        // Calculate Duration
-                        string startTimeStr = timerSnapshot.Child("startTime").Value.ToString();
-                        
-                        DateTime startTime = DateTime.Parse(startTimeStr).ToUniversalTime();
-                        DateTime finishTime = DateTime.UtcNow;
-                        
-                        TimeSpan duration = finishTime.Subtract(startTime);
-                        long durationSeconds = (long)duration.TotalSeconds;
+                    {"finishTime", finishTime.ToString("o")},
+                    {"durationSeconds", durationSeconds},
+                    {"isComplete", true}
+                };
 
-                        // Save Results to the timer node
-                        Dictionary<string, object> results = new Dictionary<string, object>
-                        {
-                            {"finishTime", finishTime.ToString("o")},
-                            {"durationSeconds", durationSeconds},
-                            {"isComplete", true}
-                        };
-
-                        dbReference.Child(componentPath).Child("timer").UpdateChildrenAsync(results);
-                        Debug.Log($"--- {componentName} Completed! Time: {durationSeconds} seconds ---");
-                    }
-                }
+                dbReference.Child(componentPath).Child("timer").UpdateChildrenAsync(results);
+                Debug.Log($"--- {componentName} Completed! Time: {durationSeconds} seconds ---");
             });
     }
 
-    // --- FUNCTION 4: READ FUNCTION (Reads from Multiple Components) ---
+    // -----------------------------------------
+    // READ (treat any >0 as collected for UI lock)
+    // -----------------------------------------
     public void LoadUserCollection()
     {
         if (string.IsNullOrEmpty(userID)) return;
@@ -250,51 +312,109 @@ public class DatabaseManager : MonoBehaviour
         dbReference.Child("users").Child(userID).Child("collection").GetValueAsync()
             .ContinueWithOnMainThread(task =>
             {
-                if (task.IsFaulted || !task.Result.Exists) return;
+                if (task.IsFaulted || task.Result == null || !task.Result.Exists) return;
 
                 DataSnapshot collectionSnapshot = task.Result;
                 DataSnapshot mainCardSnapshot = collectionSnapshot.Child("PineappleTart");
 
-                // Loop through the Master Recipe Structure to find all possible ingredients
                 foreach (var componentEntry in MasterRecipeStructure)
                 {
                     string componentName = componentEntry.Key;
                     DataSnapshot ingredientsSnapshot = mainCardSnapshot.Child(componentName);
 
-                    // Loop through every ingredient name defined in the C# code (e.g., "Butter", "Flour")
                     foreach (string ingredientName in componentEntry.Value)
                     {
-                        // 1. DYNAMICALLY FIND THE UI ICON IN THE SCENE BY NAME
-                        // This requires the UI GameObject in the Hierarchy to be named exactly "Butter", "Flour", etc.
                         GameObject icon = GameObject.Find(ingredientName);
+                        if (icon == null) continue;
 
-                        if (icon == null)
-                        {
-                            // Warning if the UI icon isn't present in the scene
-                            Debug.LogWarning($"UI Icon not found for ingredient: {ingredientName}. Skipping UI update.");
-                            continue;
-                        }
+                        int count = 0;
+                        var ingSnap = ingredientsSnapshot.Child(ingredientName);
+                        if (ingSnap.Exists)
+                            count = ConvertDbValueToInt(ingSnap.Value);
 
-                        // 2. CHECK DATABASE STATUS
-                        bool isCollected = false;
+                        bool isCollected = count > 0;
 
-                        DataSnapshot ingredientValue = ingredientsSnapshot.Child(ingredientName);
-                        if (ingredientValue.Exists && (bool)ingredientValue.Value)
-                        {
-                            isCollected = true;
-                        }
-
-                        // 3. CONTROL THE GREY LOCK PANEL
-                        // Finds the child object named "GreyLockPanel" inside the found icon GameObject
                         Transform lockPanel = icon.transform.Find("GreyLockPanel");
                         if (lockPanel != null)
-                        {
-                            // Set the lock panel to ACTIVE if NOT collected (false), and INACTIVE if collected (true).
                             lockPanel.gameObject.SetActive(!isCollected);
-                        }
                     }
                 }
-                // --- NEW LOGIC END ---
             });
     }
+
+    // -----------------------------------------
+    // Helpers
+    // -----------------------------------------
+    private string GetComponentForIngredient(string ingredientName)
+    {
+        if (MasterRecipeStructure["PineapplePaste"].Contains(ingredientName)) return "PineapplePaste";
+        if (MasterRecipeStructure["Biscuit"].Contains(ingredientName)) return "Biscuit";
+        return "";
+    }
+
+    private int GetRequiredCount(string componentName, string ingredientName)
+    {
+        if (RequiredCounts.ContainsKey(componentName) && RequiredCounts[componentName].ContainsKey(ingredientName))
+            return RequiredCounts[componentName][ingredientName];
+
+        // default (if not specified) assume 1
+        return 1;
+    }
+
+    // Converts DB values that might be bool/int/long/string into int
+    private int ConvertDbValueToInt(object value)
+    {
+        if (value == null) return 0;
+
+        if (value is bool b) return b ? 1 : 0;
+        if (value is long l) return (int)l;
+        if (value is int i) return i;
+
+        if (int.TryParse(value.ToString(), out int parsed))
+            return parsed;
+
+        return 0;
+    }
+        public void StopComponentTimer(string mainCardName, string componentName)
+    {
+        if (string.IsNullOrEmpty(userID)) return;
+
+        string componentPath = $"users/{userID}/collection/{mainCardName}/{componentName}";
+        string timerPath = $"{componentPath}/timer";
+
+        dbReference.Child(timerPath).GetValueAsync()
+            .ContinueWithOnMainThread(task =>
+            {
+                if (task.IsFaulted || task.Result == null || !task.Result.Exists) return;
+
+                var timerSnap = task.Result;
+
+                // already complete? don't overwrite
+                if (timerSnap.Child("isComplete").Exists && timerSnap.Child("isComplete").Value != null
+                    && (bool)timerSnap.Child("isComplete").Value)
+                    return;
+
+                if (!timerSnap.Child("startTime").Exists || timerSnap.Child("startTime").Value == null)
+                {
+                    Debug.LogWarning($"[DB] No startTime found for {componentName}, cannot stop timer.");
+                    return;
+                }
+
+                string startTimeStr = timerSnap.Child("startTime").Value.ToString();
+                DateTime startTime = DateTime.Parse(startTimeStr).ToUniversalTime();
+                DateTime finishTime = DateTime.UtcNow;
+
+                long durationSeconds = (long)(finishTime - startTime).TotalSeconds;
+
+                Dictionary<string, object> updates = new Dictionary<string, object>
+                {
+                    {"finishTime", finishTime.ToString("o")},
+                    {"durationSeconds", durationSeconds},
+                    {"isComplete", true}
+                };
+
+                dbReference.Child(timerPath).UpdateChildrenAsync(updates);
+                Debug.Log($"[DB] Timer STOPPED for {componentName}. Duration: {durationSeconds}s");
+            });
+    }
 }

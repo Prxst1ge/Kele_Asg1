@@ -136,7 +136,7 @@ public class AuthManager : MonoBehaviour
     private void LoadGameScene()
     {
         // Replace "AR_Scene" with the exact name of your game scene
-        SceneManager.LoadScene("SampleScene 1");
+        SceneManager.LoadScene("MainMenu");
     }
 
     // This fulfills the "User-friendly error messages" requirement (Week 4 Part 5)

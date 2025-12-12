@@ -100,6 +100,11 @@ public class IngredientController : MonoBehaviour
         ShowGlobalMessage(msg);
 
         Debug.Log($"[Ingredient] {ingredientId} added to recipe.");
+
+        // Optional: disable the button so it can't be spam-clicked
+        var btn = GetComponentInChildren<UnityEngine.UI.Button>();
+        if (btn != null) btn.interactable = false;
+
     }
 
     // ---------------- UI POPUP --------------------

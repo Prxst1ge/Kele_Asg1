@@ -28,6 +28,9 @@ public class PineapplePasteStageManager : MonoBehaviour
     [SerializeField] private GameObject bowlObject;       // bowl model in scene
     [SerializeField] private TMP_Text bowlStatusText;     // text near the bowl
     [SerializeField] private GameObject finalPasteObject; // optional “finished paste” model
+    [SerializeField] private StopwatchUI stopwatchUI;
+
+    [SerializeField] private DatabaseManager dbManager;
 
     // 🔹 NEW: Stage-complete UI
     [Header("Stage Complete UI")]
@@ -266,7 +269,16 @@ public class PineapplePasteStageManager : MonoBehaviour
         if (stageCompletePanel != null)
             stageCompletePanel.SetActive(true);
 
+        // Stop UI stopwatch
+        if (stopwatchUI != null)
+            stopwatchUI.StopTimer();
+
+        // ✅ Stop DATABASE timer (Firebase)
+        if (dbManager != null)
+            dbManager.StopComponentTimer("PineappleTart", "PineapplePaste");
+
         if (stageCompleteText != null)
             stageCompleteText.text = "Pineapple Paste Complete!";
     }
+
 }
