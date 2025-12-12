@@ -85,11 +85,69 @@ This section explains the design choices for key areas of the application:
 
 ## 5. 💻 Tech Stack (Technologies Used)
 
-| Technology | Purpose in Project |
-| :--- | :--- |
-| **Unity 3D** | The primary cross-platform engine used to build the AR application and manage all game assets, physics, and UI rendering. |
-| **C#** | The core programming language used to develop all game logic, handle database communication, and manage complex flow control or to add intereaction like rotations for the game objects. |
-| **Firebase Realtime DB** | Selected as the cloud-based backend to store volatile user data, track immutable start times, and synchronize real-time collection counts (scores). |
-| **Firebase Authentication** | Used to manage secure user sign-up and login, ensuring all user data stored in the database is correctly scoped by a unique User ID. |
-| **AR Foundation** | The Unity package used to enable cross-platform Augmented Reality capabilities, facilitating image tracking for scanning ingredient cards and displaying virtual prefabs. |
-| **GitHub** | Used for version control (Git) to track changes, manage the project's history, and collaborate with teammates by allowing synchronized pushing and pulling of code. |
+ Technology  Purpose in Project 
+ :---  :--- 
+ **Unity 3D**  The primary cross-platform engine used to build the AR application and manage all game assets, physics, and UI rendering. 
+ **C#**  The core programming language used to develop all game logic, handle database communication, and manage complex flow control or to add intereaction like rotations for the game objects. 
+ **Firebase Realtime DB**  Selected as the cloud-based backend to store volatile user data, track immutable start times, and synchronize real-time collection counts (scores). 
+ **Firebase Authentication**  Used to manage secure user sign-up and login, ensuring all user data stored in the database is correctly scoped by a unique User ID. 
+ **AR Foundation**  The Unity package used to enable cross-platform Augmented Reality capabilities, facilitating image tracking for scanning ingredient cards and displaying virtual prefabs. 
+ **GitHub**  Used for version control (Git) to track changes, manage the project's history, and collaborate with teammates by allowing synchronized pushing and pulling of code.
+
+## 6. ✨ Key Features
+
+### Existing Features 
+
+
+ **User-friendly Auth Errors**  **Secure User Authentication & Profile Integrity:** Implements Firebase Authentication... Provides user-friendly feedback and error handling for common issues like weak passwords or invalid credentials.  
+
+**In-Game Visual Timer Exists**  **(Implied by Multiple Features):** The `StopwatchUI` reference in your stage managers, combined with the Session Management features, shows a timer that is active in the game UI. A stopwatch that will start counting the moment the player has hit the play button and end when the player has finsished the treasure hunt.
+
+ **Final Score is Recorded in DB**  **Completion Trigger (Decoupled Scoring):** The timer is stopped, and the final score is calculated only when the physical mixing is complete (`CheckMixingComplete` / `CheckBowlComplete`). The database records the `durationSeconds` and sets `isComplete` to `true` upon completion and sends it to the realtime database from firebase. 
+
+* **Secure User Authentication & Profile Integrity:** Implements Firebase Authentication for sign-up/login. The system mandates that upon the first successful login, the `DatabaseManager` automatically creates the full nested user profile in Firebase, ensuring all required ingredient and timer paths exist.
+
+* **Count-based Data Collection:** The **`AddIngredientToDatabase()`** function uses Firebase Transactions to safely and reliably increment the ingredient count (e.g., `Pineapple_Ingredient: 1` to `2`) and prevents over-counting beyond the required amount.
+
+* **Stage Validation:** The **`ImageTracker`** uses the **`PineapplePasteStageManager`** and **`BiscuitStageManager`** to perform immediate client-side validation, blocking the spawning of prefabs for ingredient cards that are not valid for the currently active stage.
+
+* **Core AR Interaction (Drag, Drop, and Rotation):**
+    * The **`IngredientDraggable.cs`** script implements custom drag functionality, allowing users to physically manipulate 3D ingredient models in the AR space.
+    * The **`IngredientController.cs`** provides the **`ToggleRotate()`** method and continuous rotation logic (`Update()` method) to enhance the visual interactivity of the 3D models.
+
+* **Two-Phase Ingredient Flow:** Implements a strict, two-stage process for ingredient collection:
+    1.  **Digital Collection:** The "Add to Recipe" button increments the database count and updates a local counter.
+    2.  **Physical Completion:** The ingredient must be **physically dragged** into the virtual bowl to progress the local `dropped` count, triggering the next step.
+
+* **Completion Trigger (Decoupled Scoring):** The timer is stopped, and the final score is calculated **only** when the physical mixing is complete (`CheckMixingComplete` / `CheckBowlComplete`). This ensures the timer reflects the full process and is decoupled from the initial button press.
+
+* **Visual Collection Feedback:** The `LoadUserCollection` function reads the count data from Firebase to visually unlock/hide lock panels on collection UI elements when the count is greater than zero.
+
+* **On-Demand UI Control:** Implements the **`CardUIController`** to allow users to toggle display of supplementary information/translation panels on the AR cards.
+
+* **Firebase Initialization & Dependency Check:** Uses **`FirebaseInit.cs`** to check for and fix all necessary Firebase dependencies on application start, ensuring the environment is stable for all subsequent database and authentication calls.
+
+* **Dual Stage Game Flow:** Implements two separate, complete recipe stages (Pineapple Paste and Biscuit) managed by dedicated scripts (**`PineapplePasteStageManager.cs`** and **`BiscuitStageManager.cs`**), each with unique required ingredients and local progress tracking.
+
+* **Scene Navigation:** The **`MenuController.cs`** provides robust methods for navigating the application (AR Scanner, Collection, About Us) and handling application exit.
+
+
+## 7. 🧪 Testing & Quality Assurance
+
+The Quality Assurance process focused primarily on validating the data integrity between the client (Unity) and the cloud (Firebase Realtime Database), ensuring that session states, scoring, and collection rules were strictly enforced. Testing was conducted manually on an Android AR-compatible device.
+
+### Manual Scenario Testing
+
+
+ **Profile Creation & Auth Error**  1. Attempt sign-up with an email already in use. 2. Log in successfully.  **Game:** A user-friendly error message is displayed (e.g., "Email already in use"). **Firebase:** A new user profile structure with all counts initialized to **`0`** is created only upon successful login/signup. 
+
+ **Session Reset Integrity**  1. Press Start Hunt. 2. Collect 1 Pineapple. 3. Exit to Main Menu. 4. Return and press Start Hunt again.  **Firebase:** The `startTime` is replaced with a new timestamp, and the `Pineapple_Ingredient` count is reset to **`0`**. **Game:** The visual timer restarts from zero. 
+
+ **Transaction Safety (Limiter)**  1. Rapidly tap the "Add to Recipe" button for a card (e.g., Flour) 10 times. Required count is 1.  **Firebase:** The `Flour_Ingredient` count must not exceed **`2`**. The transaction prevents spamming and concurrent writes from corrupting the limit. 
+
+ **Stage & Card Validation**  1. Enter the Pineapple Paste scene. 2. Scan an incompatible card (e.g., Flour, which belongs to Biscuit).  **Game:** The invalid card is **blocked** from spawning any prefab. An **Invalid Card Popup** message is displayed. 
+
+ **Completion Trigger & Scoring**  1. Start Hunt. 2. Collect all required items (DB count met). 3. Physically drag the final item into the bowl.  **Firebase:** The specific component's `durationSeconds` is recorded, and `isComplete` flips to **`true`**. **Game:** The completion panel appears **after** the Firebase update succeeds. 
+
+ **Collection Unlock Feedback**  1. Complete the Pineapple Paste hunt (sets `isComplete: true`). 2. Navigate to the Collections page.  **Game:** The corresponding item/card in the collection UI must be visually **unlocked** (GreyLockPanel is inactive). 
+
