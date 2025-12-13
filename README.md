@@ -1,9 +1,9 @@
-# 🍍 KELE Pineapple Tart AR Treasure Hunt
+# 🍍 KELE Pineapple Tart AR Treasure Hunt (DDA portion)
 
-## 📌 Project Overview
+## 1. 📌 Project Overview
 This project is a Unity-based Augmented Reality (AR) application designed as an engaging, time-based treasure hunt. The core objective is for the player to physically move around and scan digital ingredient cards to complete the full Pineapple Tart recipe.
 
-## Quick Game Guide/Flow
+## 2. Quick Game Guide/Flow
 This guide walks you through the step-by-step process of navigating the app.
 ### A. Setup & Main Menu
 
@@ -41,6 +41,11 @@ This guide walks you through the step-by-step process of navigating the app.
     * Return to the Main Menu and select **Collections** to view your unlocked progress. You will see the individual ingredient cards you collected, plus the final completion card unlocked after finishing the entire hunt.
 8.  **Replay for Best Time:**
     * Players are able to restart the treasure hunt from the beginning at any time to attempt to get a better total completion time.
+
+### D. Additional Feature
+
+10. **Viewing Collections:**
+    * Players are able to to go the online website to check for where they are on the leaderboard and learn more about kele heritage if they want to.
 
 
 ## 3. 📱 Platform Support
@@ -249,7 +254,81 @@ The Quality Assurance process focused primarily on validating the data integrity
 | **Unity Packages** | **AR Foundation, ARCore XR Plugin, TextMeshPro (TMPro):** | Standard Unity packages used for implementing AR functionality, tracking, and UI text rendering. |
 
 
-## 5. 📚 References and Citations
+
+
+
+# 💻 Technical Walkthrough & IT Documentation
+
+### 1. 🔑 Key Controls/Hacks 
+This section outlines the primary methods for interacting with the Kele AR application.
+
+### **General User Interface (UI) Controls**
+
+| Control | Action/Function |
+| :--- | :--- |
+| **Single Tap / Press** | Selects menu options, activates buttons (e.g., *Start Game*, *Collect Ingredient*), and confirms choices. |
+
+## 2. 🎮 How to Play / Run the Application
+
+This guide walks you through the step-by-step process of navigating the Kele AR App, from logging in to completing the Treasure Hunt.
+
+### A. Setup & Main Menu Navigation
+
+1.  **Launch & Log In:**
+    * Launch the application on your mobile device.
+    * Use the authentication screen to **Log In** to your previous account or **Create a New Account**.
+
+2.  **Main Menu Options:**
+    * After logging in, you will arrive at the Main Menu, which provides three primary navigation options:
+        * **About Us:** View company history, details, and products from KELE.
+        * **AR Scanner:** Start the ingredient treasure hunt and scanning process.
+        * **Collections:** View your digital collection of scanned ingredient cards and unlocked recipes.
+
+### B. The Treasure Hunt Gameplay
+
+3.  **Initiate Hunt & Timer:**
+    * Select the **AR Scanner** button from the Main Menu. You will be directed to the scanning interface.
+    * A **stopwatch timer** (Minutes:Seconds) will appear and automatically begin counting down the moment the hunt initiates.
+    * **Note:** If you exit the app or lock your phone, the timer will **reset** and the hunt must be restarted upon resuming the game.
+
+4.  **Scanning & Collecting Ingredients:**
+    * Use the device camera to physically locate and scan the **hidden ingredient cards** (AR targets) in the real-life environment.
+    * After successfully scanning a card, tap the **"Add to Recipe"** button that appears on the screen to collect the ingredient and add it to your current digital recipe.
+
+5.  **Component Completion & Progression:**
+    * Once you have collected all the necessary ingredients for the current **recipe component** (e.g., the Pineapple Paste), a virtual **bowl** will appear.
+    * Place all collected ingredients into the bowl to complete that component.
+    * Upon successfully completing all recipe components of the treasure hunt, the timer will automatically **stop**, and your total completion time will be recorded.
+    * The app will automatically progress you to the next recipe component, repeating the card scanning process.
+
+6.  **Final Completion & Reward:**
+    * A **Surprise** button will appear, which provides instructions for collecting a **physical gift** from the store clerk.
+
+### C. Post-Game Features
+
+7.  **Reviewing Collections:**
+    * From the Main Menu, select **Collections** to view all your unlocked progress, including the individual ingredient cards and the final completion card.
+
+8.  **Replay for Best Time:**
+    * Players can restart the Treasure Hunt at any time from the Main Menu to attempt to achieve a faster total completion time.
+
+
+
+### 2. 🖥️ Platforms and Hardware Requirements
+
+The Kele AR application is an **AR-Required** application designed for the Android ecosystem. It leverages Google's ARCore platform for all Augmented Reality functionality, including card scanning and 3D object rendering.
+
+| Category | Requirement / Specification | Notes |
+| :--- | :--- | :--- |
+| **Platform** | Android OS Only | Currently, the application is exclusive to Android devices. |
+| **Minimum OS** | Android 7.0 (API Level 24) or Newer | This is the minimum required OS level for ARCore functionality. |
+| **AR Framework** | Google Play Services for AR (ARCore) | The device **must** be ARCore-certified. If the service is not installed, the application will prompt the user for installation/update. |
+| **Connectivity** | Internet Connection for Initial Download & Updates | An internet connection (Wi-Fi or Cellular Data) is required for app installation and any necessary ARCore service updates. Gameplay may be functional offline once resources are loaded. |
+
+
+### 3. 🐛 Limitations and Known Bugs
+
+## 📚 References and Citations (Both DDA and ITD)
 
 The following sources, assets, and documentation were utilized for the research, development, and artistic inspiration of the AR Pastry Chef application.
 
