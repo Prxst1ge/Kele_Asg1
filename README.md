@@ -275,8 +275,9 @@ This guide walks you through the step-by-step process of navigating the Kele AR 
 ### A. Setup & Main Menu Navigation
 
 1.  **Launch & Log In:**
-    * Launch the application on your mobile device.
-    * Use the authentication screen to **Log In** to your previous account or **Create a New Account**.
+    * Launch the application on your mobile device, by downloading the APK file.
+    * An authentication will show up to ask the user to Login.
+    * Use the authentication screen to **Log In** to your previous account or **Create a New Account** if user does not have any account currently.
 
 2.  **Main Menu Options:**
     * After logging in, you will arrive at the Main Menu, which provides three primary navigation options:
@@ -287,22 +288,25 @@ This guide walks you through the step-by-step process of navigating the Kele AR 
 ### B. The Treasure Hunt Gameplay
 
 3.  **Initiate Hunt & Timer:**
-    * Select the **AR Scanner** button from the Main Menu. You will be directed to the scanning interface.
-    * A **stopwatch timer** (Minutes:Seconds) will appear and automatically begin counting down the moment the hunt initiates.
+    * Select the **AR Scanner** button from the Main Menu. You will be directed to the scanning interface page.
+    * There will then be two options, Pineapple paste and Biscuit. The Biscuit treasure hunt would only be unlocked after the user has completed the Pineapple paste treasure hunt.
+    * Select the **Pineapple paste** button if user has not completed it, if not select the **Biscuit** button to start the game.
+    * A **stopwatch timer** (Minutes:Seconds) will appear and automatically begin counting down the moment the user presses the start button to start the game.
     * **Note:** If you exit the app or lock your phone, the timer will **reset** and the hunt must be restarted upon resuming the game.
 
 4.  **Scanning & Collecting Ingredients:**
-    * Use the device camera to physically locate and scan the **hidden ingredient cards** (AR targets) in the real-life environment.
-    * After successfully scanning a card, tap the **"Add to Recipe"** button that appears on the screen to collect the ingredient and add it to your current digital recipe.
+    * Use the device camera to physically locate and scan the **hidden ingredient cards** (AR targets) in the real-life environment(The Kele store will have poster put up around for user to scan to collect the ingredient).
+    * After successfully scanning a card, tap the **"Add to Recipe"** button that appears on the screen to collect the ingredient and add it to your current digital recipe. Interaction can be made through the Show deatil button (Which shows details about the ingredient) and a rotation button (Which spins the 3D model making it feel more interactive).
 
 5.  **Component Completion & Progression:**
     * Once you have collected all the necessary ingredients for the current **recipe component** (e.g., the Pineapple Paste), a virtual **bowl** will appear.
-    * Place all collected ingredients into the bowl to complete that component.
+    * Place all collected ingredients into the bowl to complete that component, by pressing on the object through the phone screen and dragging it to the bowl.
     * Upon successfully completing all recipe components of the treasure hunt, the timer will automatically **stop**, and your total completion time will be recorded.
     * The app will automatically progress you to the next recipe component, repeating the card scanning process.
 
 6.  **Final Completion & Reward:**
-    * A **Surprise** button will appear, which provides instructions for collecting a **physical gift** from the store clerk.
+    * A **Surprise** button will appear after user has completed both treasure hutn, which provides instructions for collecting a **physical gift** from the store clerk.
+    * Alternatively user can press the main menu button which would bring the user back to the main menu.
 
 ### C. Post-Game Features
 
