@@ -1,0 +1,5 @@
+C:/Users/kent_/OneDrive/Documents/Year 2/Y2.2/ITD/Asg1_Kele/.utmp/RelWithDebInfo/60664h1o/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/kent_/OneDrive/Documents/Year 2/Y2.2/ITD/Asg1_Kele/.utmp/RelWithDebInfo/60664h1o/arm64-v8a/CMakeFiles/rebuild_cache.dir
+C:/Users/kent_/OneDrive/Documents/Year 2/Y2.2/ITD/Asg1_Kele/.utmp/RelWithDebInfo/60664h1o/arm64-v8a/GameActivity/CMakeFiles/game.dir
+C:/Users/kent_/OneDrive/Documents/Year 2/Y2.2/ITD/Asg1_Kele/.utmp/RelWithDebInfo/60664h1o/arm64-v8a/GameActivity/CMakeFiles/edit_cache.dir
+C:/Users/kent_/OneDrive/Documents/Year 2/Y2.2/ITD/Asg1_Kele/.utmp/RelWithDebInfo/60664h1o/arm64-v8a/GameActivity/CMakeFiles/rebuild_cache.dir

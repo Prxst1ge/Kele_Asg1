@@ -1,0 +1,2 @@
+C:\Users\kent_\OneDrive\Documents\Year 2\Y2.2\ITD\Asg1_Kele\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\CMakeLists.txt
+C:\Users\kent_\OneDrive\Documents\Year 2\Y2.2\ITD\Asg1_Kele\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\src\main\cpp\GameActivity\CMakeLists.txt

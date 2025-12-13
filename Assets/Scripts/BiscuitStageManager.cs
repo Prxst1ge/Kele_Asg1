@@ -4,22 +4,21 @@ using TMPro;
 
 public class BiscuitStageManager : MonoBehaviour
 {
-    // ---- Singleton (easy access like PineapplePasteStageManager.Instance) ----
     public static BiscuitStageManager Instance { get; private set; }
 
-    [Header("Ingredient IDs (match IngredientController.IngredientId)")]
-    [SerializeField] private string flourId  = "flour";
-    [SerializeField] private string butterId = "butter";
-    [SerializeField] private string waterId  = "water";
+    [Header("Ingredient IDs (must match reference image names / prefab names)")]
+    [SerializeField] private string flourId  = "Flour_Ingredient";
+    [SerializeField] private string butterId = "Butter_Ingredient";
+    [SerializeField] private string waterId  = "Water_Ingredient";
 
-    [Header("Required amounts")]
+    [Header("Required amounts (Add to Recipe step)")]
     [SerializeField] private int requiredFlour  = 2;
     [SerializeField] private int requiredButter = 1;
     [SerializeField] private int requiredWater  = 1;
 
     [Header("Stage UI")]
-    [SerializeField] private TMP_Text stageStatusText; // flour/butter/water counts
-    [SerializeField] private GameObject mixBowlUI;     // shown when stage complete
+    [SerializeField] private TMP_Text stageStatusText;
+    [SerializeField] private GameObject mixBowlUI;
 
     [Header("Invalid Card Popup")]
     [SerializeField] private GameObject invalidCardPanel;
@@ -27,20 +26,21 @@ public class BiscuitStageManager : MonoBehaviour
     [SerializeField] private float invalidPopupDuration = 2f;
 
     [Header("Mixing Bowl")]
-    [SerializeField] private GameObject bowlObject;        // bowl model in scene
-    [SerializeField] private TMP_Text bowlStatusText;      // text near the bowl
-    [SerializeField] private GameObject finalDoughObject;  // finished biscuit dough model
+    [SerializeField] private GameObject bowlObject;
+    [SerializeField] private TMP_Text bowlStatusText;
+    [SerializeField] private GameObject finalDoughObject;
 
-    // ✅ Timer UI (copied concept from PineapplePasteStageManager)
     [Header("Stopwatch UI")]
     [SerializeField] private StopwatchUI stopwatchUI;
 
-    // ✅ Stage complete UI (same idea as pineapple)
+    [Header("Database")]
+    [SerializeField] private DatabaseManager dbManager;
+
     [Header("Stage Complete UI")]
     [SerializeField] private GameObject levelCompletePanel;
-    [SerializeField] private TMP_Text levelCompleteText; // optional
+    [SerializeField] private TMP_Text levelCompleteText;
 
-    // counts from "Add to Recipe" button
+    // counts from "Add to Recipe"
     int flourCount;
     int butterCount;
     int waterCount;
@@ -65,27 +65,19 @@ public class BiscuitStageManager : MonoBehaviour
         }
         Instance = this;
 
-        // Make sure bowl & UI start hidden
         if (bowlObject != null)       bowlObject.SetActive(false);
         if (finalDoughObject != null) finalDoughObject.SetActive(false);
         if (mixBowlUI != null)        mixBowlUI.SetActive(false);
-
-        // Hide complete panel at start
-        if (levelCompletePanel != null)
-            levelCompletePanel.SetActive(false);
+        if (levelCompletePanel != null) levelCompletePanel.SetActive(false);
 
         UpdateStatusUI();
     }
 
-    // ------------------  CARD VALIDATION (called from ImageTracker) ------------------
+    // ------------------ CARD VALIDATION (ImageTracker can call this before spawning) ------------------
 
     public bool ValidateCard(string cardId)
     {
-        // Only allow biscuit ingredients in this scene
-        bool valid =
-            cardId == flourId ||
-            cardId == butterId ||
-            cardId == waterId;
+        bool valid = (cardId == flourId || cardId == butterId || cardId == waterId);
 
         if (!valid)
             ShowInvalidCardPopup("This ingredient cannot be used in the Biscuit stage.");
@@ -93,55 +85,71 @@ public class BiscuitStageManager : MonoBehaviour
         return valid;
     }
 
-    // ------------------  WHEN BUTTON "ADD TO RECIPE" IS PRESSED ------------------
+    // ------------------ WHEN BUTTON "ADD TO RECIPE" IS PRESSED ------------------
 
     public bool RegisterIngredient(string ingredientId)
     {
-        // increment counts according to ingredient
-        if (ingredientId == flourId)       flourCount++;
-        else if (ingredientId == butterId) butterCount++;
-        else if (ingredientId == waterId)  waterCount++;
-        else
-        {
-            Debug.Log("[BiscuitStage] Ingredient not used in this stage: " + ingredientId);
+        if (!ValidateCard(ingredientId))
             return false;
-        }
 
-        Debug.Log($"[BiscuitStage] Added {ingredientId}. Now F={flourCount} B={butterCount} W={waterCount}");
+        // Prevent over-counting beyond requirement
+        if (ingredientId == flourId)
+        {
+            if (flourCount >= requiredFlour) return false;
+            flourCount++;
+        }
+        else if (ingredientId == butterId)
+        {
+            if (butterCount >= requiredButter) return false;
+            butterCount++;
+        }
+        else if (ingredientId == waterId)
+        {
+            if (waterCount >= requiredWater) return false;
+            waterCount++;
+        }
 
         UpdateStatusUI();
         CheckStageComplete();
-
         return true;
     }
 
-    // ------------------  WHEN DROPPED INTO BOWL ------------------
+    // ------------------ WHEN DROPPED INTO BOWL ------------------
 
     public void OnIngredientDroppedInBowl(string ingredientId, GameObject ingredientGO)
     {
-        // Only react once we are in the mixing step
         if (!mixStageStarted || mixingComplete)
             return;
 
-        if (ingredientId == flourId)          bowlFlourCount++;
-        else if (ingredientId == butterId)    bowlButterCount++;
-        else if (ingredientId == waterId)     bowlWaterCount++;
+        if (ingredientId == flourId)
+        {
+            if (bowlFlourCount >= requiredFlour) return;
+            bowlFlourCount++;
+        }
+        else if (ingredientId == butterId)
+        {
+            if (bowlButterCount >= requiredButter) return;
+            bowlButterCount++;
+        }
+        else if (ingredientId == waterId)
+        {
+            if (bowlWaterCount >= requiredWater) return;
+            bowlWaterCount++;
+        }
         else
         {
-            Debug.Log("[BiscuitStage] Non-biscuit ingredient dropped in bowl: " + ingredientId);
+            // ignore anything else
             return;
         }
 
-        Debug.Log($"[BiscuitStage] Bowl drop {ingredientId}. Now F={bowlFlourCount} B={bowlButterCount} W={bowlWaterCount}");
-
         if (ingredientGO != null)
-            ingredientGO.SetActive(false); // hide once dropped
+            ingredientGO.SetActive(false);
 
         UpdateBowlStatusUI();
         CheckBowlComplete();
     }
 
-    // ------------------  CHECKS ------------------
+    // ------------------ CHECKS ------------------
 
     void CheckStageComplete()
     {
@@ -153,9 +161,7 @@ public class BiscuitStageManager : MonoBehaviour
         if (complete && !mixStageStarted)
         {
             mixStageStarted = true;
-            Debug.Log("[BiscuitStage] All biscuit ingredients collected! Start mixing.");
 
-            // Show "drag into bowl" UI and the bowl itself
             if (mixBowlUI != null)  mixBowlUI.SetActive(true);
             if (bowlObject != null) bowlObject.SetActive(true);
 
@@ -174,7 +180,6 @@ public class BiscuitStageManager : MonoBehaviour
         if (complete && !mixingComplete)
         {
             mixingComplete = true;
-            Debug.Log("[BiscuitStage] Bowl complete! Showing level complete UI.");
 
             if (bowlStatusText != null)
                 bowlStatusText.text = "Biscuit dough ready!";
@@ -193,14 +198,19 @@ public class BiscuitStageManager : MonoBehaviour
 
         if (levelCompletePanel != null)
             levelCompletePanel.SetActive(true);
-            if (stopwatchUI != null)
+
+        if (stopwatchUI != null)
             stopwatchUI.StopTimer();
+
+        // stop Firebase timer for Biscuit stage
+        if (dbManager != null)
+            dbManager.StopComponentTimer("PineappleTart", "Biscuit");
 
         if (levelCompleteText != null)
             levelCompleteText.text = "Biscuit Completed!";
     }
 
-    // ------------------  UI HELPERS ------------------
+    // ------------------ UI HELPERS ------------------
 
     void UpdateStatusUI()
     {

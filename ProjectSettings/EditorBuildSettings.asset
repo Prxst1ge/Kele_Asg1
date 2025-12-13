@@ -11,10 +11,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Auth.unity
     guid: d4cef8a2cba54644b88938ce356f9eaf
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: d74ae12696ea1fc45857c12283dc654d
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/SampleScene 1.unity
     guid: 7e791e74fbcf0e74ead18b27add88672
   - enabled: 1
@@ -29,6 +29,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Biscuit_AR.unity
     guid: ba7179548d5db824fb9e026b05b90269
+  - enabled: 1
+    path: Assets/Scenes/Collections.unity
+    guid: 7c76144fe8e956f448d1d9ab2cbbd7e1
+  - enabled: 1
+    path: Assets/Scenes/About us.unity
+    guid: 9aee6cdfaf1386c42bb579a1cceca2b4
+  - enabled: 1
+    path: Assets/Scenes/SurpriseScene.unity
+    guid: be7003922255b3141b91e1bac6e8c3ca
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 6ee72d15cf39dd748a13eac57397b9af, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: 0465d33c6aee55f44b0237db8b0e0259, type: 2}

@@ -101,7 +101,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 134681351901863442}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.0012993099}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
   m_LocalScale: {x: 1.1905286, y: 1.1905286, z: 1.1905286}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -109,7 +109,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1715, y: 711}
+  m_AnchoredPosition: {x: -1730, y: 711}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3878499724341702677
@@ -140,7 +140,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "LEMON \u2014 KELE\u2019S Natural Brightener\n\n"
+  m_text: "BUTTER \u2014 KELE\u2019S Buttery Foundation\n\n\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
   m_sharedMaterial: {fileID: 6253256887119518014, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
@@ -205,7 +205,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 3.5508118, z: -288.18832, w: -3.075615}
+  m_margin: {x: 0, y: 3.5508118, z: -302.50735, w: -3.075615}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -451,7 +451,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae9f9c84a471aee40963818687d647b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  collectionIcons: []
 --- !u!1 &1813810017198124031
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,18 +613,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2386789916762132835}
-  m_LocalRotation: {x: -0, y: 0.000000014901159, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.31398958}
-  m_LocalScale: {x: 0.00189, y: 0.0022, z: 0.0014800001}
+  m_LocalRotation: {x: 0.70710576, y: 0.000000010536728, z: 0.000000010536696, w: 0.70710784}
+  m_LocalPosition: {x: 0, y: 0, z: -0.25515702}
+  m_LocalScale: {x: 0.0010074673, y: 0.0011727131, z: 0.0007889162}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3539821444920571570}
   - {fileID: 6624737158549321707}
   m_Father: {fileID: 1006827085566240621}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -110.42436, y: -252.26523}
+  m_AnchoredPosition: {x: -110.570526, y: -252.47902}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1577760830615032459
@@ -928,18 +927,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3147168385028701661}
-  m_LocalRotation: {x: -0, y: 0.000000014901159, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.3140921}
-  m_LocalScale: {x: 0.00217, y: 0.00223, z: 0.0014800001}
+  m_LocalRotation: {x: 0.70710576, y: 0.000000010536728, z: 0.000000010536696, w: 0.70710784}
+  m_LocalPosition: {x: 0, y: 0, z: -0.375219}
+  m_LocalScale: {x: 0.0011567217, y: 0.0011887047, z: 0.0007889162}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6592026128447229081}
   - {fileID: 193561451972552451}
   m_Father: {fileID: 1006827085566240621}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -110.42952, y: -252.4994}
+  m_AnchoredPosition: {x: -110.570526, y: -252.47902}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &220433617490305500
@@ -1213,18 +1212,18 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4755803345935287660}
-  m_LocalRotation: {x: -0, y: 0.000000014901159, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.31410384}
-  m_LocalScale: {x: 0.00289, y: 0.0033800001, z: 0.00278}
+  m_LocalRotation: {x: 0.70710576, y: 0.000000010536728, z: 0.000000010536696, w: 0.70710784}
+  m_LocalPosition: {x: 0, y: 0, z: -0.3152009}
+  m_LocalScale: {x: 0.0015405187, y: 0.0018017141, z: 0.001481883}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1590643732009939742}
   - {fileID: 7121917073271547943}
   m_Father: {fileID: 1006827085566240621}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -110.43217, y: -252.38136}
+  m_AnchoredPosition: {x: -110.570526, y: -252.47894}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1246738676489278552
@@ -1766,9 +1765,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6409710226322703572}
-  m_LocalRotation: {x: -0.12942806, y: -0.000000029802319, z: -0.00000037997955, w: 0.99158883}
-  m_LocalPosition: {x: 0, y: 0, z: -0.314}
-  m_LocalScale: {x: 0.00042, y: 0.00042000005, z: 0.00041999997}
+  m_LocalRotation: {x: 0.70788836, y: 0.00000028331513, z: -0.00000025496115, w: 0.70632434}
+  m_LocalPosition: {x: 0, y: 0, z: -0.2651883}
+  m_LocalScale: {x: 0.00022388162, y: 0.00022388165, z: 0.0002238816}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6800358912708207374}
@@ -1781,10 +1780,10 @@ RectTransform:
   - {fileID: 1771009960148133932}
   - {fileID: 6844593147404350803}
   m_Father: {fileID: 1006827085566240621}
-  m_LocalEulerAnglesHint: {x: -14.873, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90.127014, y: -0.0010070801, z: -0.0010070801}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -110.161, y: -252.216}
+  m_AnchoredPosition: {x: -110.4205, y: -252.47371}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &6592665147397739830
@@ -1988,8 +1987,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Lemon has been used for centuries as a natural preservative \u2014 its
-    acidity helps maintain freshness in fruit-based recipes."
+  m_text: "Butter contains natural milk solids that brown slightly during baking
+    \u2014 this \u201Cbrowned butter effect\u201D gives KELE tarts their iconic golden
+    colour and nutty scent.\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
   m_sharedMaterial: {fileID: 6253256887119518014, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
@@ -2086,7 +2086,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8324869622228086893}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.0012993099}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 0.6694847, y: 0.6694847, z: 0.6694847}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2094,7 +2094,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1793, y: 584}
+  m_AnchoredPosition: {x: -1793, y: 589}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9076604754868850468
@@ -2125,8 +2125,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Lemon adds a subtle tanginess and aroma that brightens the pineapple filling.
-    It enhances the fruit\u2019s freshness and balances sweetness.\n\n"
+  m_text: "Butter is the heart of KELE\u2019s crumbly, melt-in-your-mouth pastry.
+    High-quality butter is carefully incorporated to create a rich aroma and delicate
+    texture that defines KELE\u2019s signature tarts.\n\n\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
   m_sharedMaterial: {fileID: 6253256887119518014, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
@@ -2223,7 +2224,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8486690610542729523}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.0012993099}
+  m_LocalPosition: {x: 0, y: 0, z: 2}
   m_LocalScale: {x: 0.6694847, y: 0.6694847, z: 0.6694847}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2231,7 +2232,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1792.9773, y: 448}
+  m_AnchoredPosition: {x: -1793, y: 455}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7336004123483121194
@@ -2262,10 +2263,10 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Natural Acidity \u2014 Enhances pineapple flavour and prevents the filling
-    from becoming overly sweet.\n\nFresh Aroma \u2014 Contributes a light citrus
-    scent to the paste.\n\nColour Preservation \u2014 Helps maintain the pineapple\u2019s
-    natural golden tone during cooking.\n\n"
+  m_text: "Premium Creaminess \u2014 Butter provides the smooth, rich flavour KELE
+    is known for.\n\nPerfect Crumb Texture \u2014 Ensures the pastry breaks gently
+    without crumbling excessively.\n\nAromatic Warmth \u2014 Releases a fragrant,
+    comforting aroma when baked, enhancing the overall experience.\n\n\n"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
   m_sharedMaterial: {fileID: 6253256887119518014, guid: ae35b45bffbb0904097f004ddc58e324, type: 2}
@@ -2405,8 +2406,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b88145fc110dea47b4ce1cabc02c80d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  translationPanel: {fileID: 0}
-  buttonLabel: {fileID: 0}
+  translationPanel: {fileID: 6409710226322703572}
+  buttonLabel: {fileID: 2343736961143454621}
 --- !u!1001 &2201214810190067873
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2416,28 +2417,40 @@ PrefabInstance:
     m_TransformParent: {fileID: 4736583665674053136}
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 53.305145
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 53.305145
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 53.305145
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.388
+      value: -0.162
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.54
+      value: 0.762
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -0.59604716
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.7071067
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.7071068
+      value: -0.0000015497205
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: b0737de18fdd7f74e9e13bc4749cee6b, type: 3}
       propertyPath: m_LocalRotation.z

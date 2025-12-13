@@ -28,7 +28,7 @@ public class IngredientController : MonoBehaviour
     {
         if (isRotating && ingredientModel != null)
         {
-            ingredientModel.Rotate(0f, rotationSpeed * Time.deltaTime, 0f, Space.World);
+            ingredientModel.Rotate(Vector3.right, rotationSpeed * Time.deltaTime, Space.Self);
         }
     }
 
@@ -56,7 +56,6 @@ public class IngredientController : MonoBehaviour
             return;
         }
 
-        // 🔥 NEW PART — ask stage manager if allowed
         if (PineapplePasteStageManager.Instance != null)
         {
             bool accepted = PineapplePasteStageManager.Instance.RegisterIngredient(ingredientId);
@@ -101,7 +100,6 @@ public class IngredientController : MonoBehaviour
 
         Debug.Log($"[Ingredient] {ingredientId} added to recipe.");
 
-        // Optional: disable the button so it can't be spam-clicked
         var btn = GetComponentInChildren<UnityEngine.UI.Button>();
         if (btn != null) btn.interactable = false;
 

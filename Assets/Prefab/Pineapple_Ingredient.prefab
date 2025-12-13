@@ -227,7 +227,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 2031436772854466822}
         m_TargetAssemblyTypeName: IngredientController, Assembly-CSharp
         m_MethodName: ToggleRotate
         m_Mode: 1
@@ -1861,7 +1861,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 8305897013021462151}
         m_TargetAssemblyTypeName: CardUIController, Assembly-CSharp
         m_MethodName: ToggleTranslation
         m_Mode: 1
