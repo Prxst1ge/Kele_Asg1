@@ -1,58 +1,150 @@
+/*
+ * Author: Javier
+ * Date: 8 December 2025
+ * Description:
+ * Manages the Pineapple Paste AR stage flow.
+ * Handles ingredient validation, add-to-recipe tracking, mixing logic,
+ * bowl interactions, UI feedback, stopwatch control, and database updates
+ * when the stage is completed.
+ */
+
 using UnityEngine;
 using TMPro;
+using System.Collections;
 
+/// <summary>
+/// Controls the full gameplay flow for the Pineapple Paste stage.
+/// This includes ingredient validation, progress tracking,
+/// mixing interactions, UI updates, and stage completion handling.
+/// </summary>
 public class PineapplePasteStageManager : MonoBehaviour
 {
+    /// <summary>
+    /// Singleton instance of the PineapplePasteStageManager.
+    /// Ensures only one instance exists at runtime.
+    /// </summary>
     public static PineapplePasteStageManager Instance { get; private set; }
 
     [Header("Ingredient IDs (must match reference image names)")]
+
+    /// <summary>
+    /// Reference image / database key for pineapple ingredient.
+    /// </summary>
     [SerializeField] private string pineappleId = "Pineapple_Ingredient";
-    [SerializeField] private string sugarId     = "Sugar_Ingredient";
-    [SerializeField] private string lemonId     = "Lemon_Ingredient";
+
+    /// <summary>
+    /// Reference image / database key for sugar ingredient.
+    /// </summary>
+    [SerializeField] private string sugarId = "Sugar_Ingredient";
+
+    /// <summary>
+    /// Reference image / database key for lemon ingredient.
+    /// </summary>
+    [SerializeField] private string lemonId = "Lemon_Ingredient";
 
     [Header("Required amounts (Add to Recipe step)")]
+
+    /// <summary>
+    /// Required number of pineapples to progress.
+    /// </summary>
     [SerializeField] private int requiredPineapples = 2;
-    [SerializeField] private int requiredSugar      = 1;
-    [SerializeField] private int requiredLemon      = 1;
+
+    /// <summary>
+    /// Required number of sugar units to progress.
+    /// </summary>
+    [SerializeField] private int requiredSugar = 1;
+
+    /// <summary>
+    /// Required number of lemons to progress.
+    /// </summary>
+    [SerializeField] private int requiredLemon = 1;
 
     [Header("Stage UI")]
-    [SerializeField] private TMP_Text stageStatusText;   // counter in the top-right card
-    [SerializeField] private GameObject mixBowlUI;       // e.g. “Drag ingredients into bowl” panel
+
+    /// <summary>
+    /// UI text displaying ingredient progress counters.
+    /// </summary>
+    [SerializeField] private TMP_Text stageStatusText;
+
+    /// <summary>
+    /// UI prompt shown when mixing stage becomes available.
+    /// </summary>
+    [SerializeField] private GameObject mixBowlUI;
 
     [Header("Invalid Card Popup")]
+
+    /// <summary>
+    /// Panel shown when an invalid ingredient card is scanned.
+    /// </summary>
     [SerializeField] private GameObject invalidCardPanel;
+
+    /// <summary>
+    /// Text displayed on the invalid card popup.
+    /// </summary>
     [SerializeField] private TMP_Text invalidCardText;
+
+    /// <summary>
+    /// Duration (in seconds) the invalid card popup remains visible.
+    /// </summary>
     [SerializeField] private float invalidPopupDuration = 2f;
 
     [Header("Mixing Bowl")]
-    [SerializeField] private GameObject bowlObject;       // bowl model in scene
-    [SerializeField] private TMP_Text bowlStatusText;     // text near the bowl
-    [SerializeField] private GameObject finalPasteObject; // optional “finished paste” model
+
+    /// <summary>
+    /// Bowl object used for ingredient mixing.
+    /// </summary>
+    [SerializeField] private GameObject bowlObject;
+
+    /// <summary>
+    /// Text displayed near the bowl during mixing.
+    /// </summary>
+    [SerializeField] private TMP_Text bowlStatusText;
+
+    /// <summary>
+    /// Final pineapple paste model shown after mixing completes.
+    /// </summary>
+    [SerializeField] private GameObject finalPasteObject;
+
+    /// <summary>
+    /// UI stopwatch used to track stage completion time.
+    /// </summary>
     [SerializeField] private StopwatchUI stopwatchUI;
 
+    /// <summary>
+    /// Reference to DatabaseManager for saving stage timing data.
+    /// </summary>
     [SerializeField] private DatabaseManager dbManager;
 
-    // 🔹 NEW: Stage-complete UI
     [Header("Stage Complete UI")]
-    [SerializeField] private GameObject stageCompletePanel; // panel with "Pineapple Paste Complete!"
-    [SerializeField] private TMP_Text stageCompleteText;    // optional text on that panel
 
-    // Counts for ingredients that have been ADDED (button press)
-    int pineappleCount;
-    int sugarCount;
-    int lemonCount;
+    /// <summary>
+    /// Panel displayed when the stage is fully completed.
+    /// </summary>
+    [SerializeField] private GameObject stageCompletePanel;
 
-    // Counts for ingredients physically dropped into the bowl
-    int droppedPineapple;
-    int droppedSugar;
-    int droppedLemon;
+    /// <summary>
+    /// Text displayed on the stage completion panel.
+    /// </summary>
+    [SerializeField] private TMP_Text stageCompleteText;
+
+    /// <summary>
+    /// Count of ingredients added via Add to Recipe button.
+    /// </summary>
+    int pineappleCount, sugarCount, lemonCount;
+
+    /// <summary>
+    /// Count of ingredients physically dropped into the bowl.
+    /// </summary>
+    int droppedPineapple, droppedSugar, droppedLemon;
 
     Coroutine invalidPopupRoutine;
     bool mixStageStarted = false;
-    bool mixingComplete  = false;
-    bool stageCompleteShown = false;   // 🔹 NEW flag
+    bool mixingComplete = false;
+    bool stageCompleteShown = false;
 
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Initializes the singleton instance and hides all stage UI elements.
+    /// </summary>
     void Awake()
     {
         if (Instance != null && Instance != this)
@@ -62,49 +154,44 @@ public class PineapplePasteStageManager : MonoBehaviour
         }
         Instance = this;
 
-        // Make sure bowl and final paste start hidden
-        if (bowlObject != null)       bowlObject.SetActive(false);
+        if (bowlObject != null) bowlObject.SetActive(false);
         if (finalPasteObject != null) finalPasteObject.SetActive(false);
-        if (mixBowlUI != null)        mixBowlUI.SetActive(false);
-
-        // 🔹 NEW: hide stage-complete panel at start
-        if (stageCompletePanel != null)
-            stageCompletePanel.SetActive(false);
+        if (mixBowlUI != null) mixBowlUI.SetActive(false);
+        if (stageCompletePanel != null) stageCompletePanel.SetActive(false);
 
         UpdateStatusUI();
     }
 
-    // ---------------------------------------------------------
-    //  Called by ImageTracker BEFORE spawning a prefab
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Validates whether a scanned card is allowed in this stage.
+    /// </summary>
+    /// <param name="cardId">Scanned card identifier.</param>
+    /// <returns>True if valid, otherwise false.</returns>
     public bool ValidateCard(string cardId)
     {
         bool valid =
             cardId == pineappleId ||
-            cardId == sugarId     ||
+            cardId == sugarId ||
             cardId == lemonId;
 
         if (!valid)
         {
-            ShowInvalidCardPopup(
-                "This ingredient cannot be used in the Pineapple Paste stage."
-            );
+            ShowInvalidCardPopup("This ingredient cannot be used in the Pineapple Paste stage.");
         }
 
         return valid;
     }
 
-    // ---------------------------------------------------------
-    //  Called by IngredientController.AddToRecipe()
-    //  Returns true = accepted (update its UI), false = reject
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Registers an ingredient when the Add to Recipe button is pressed.
+    /// </summary>
+    /// <param name="ingredientId">Ingredient identifier.</param>
+    /// <returns>True if accepted, otherwise false.</returns>
     public bool RegisterIngredient(string ingredientId)
     {
-        // Only allow the 3 valid IDs
         if (!ValidateCard(ingredientId))
             return false;
 
-        // Prevent over-counting the same type beyond requirement
         switch (ingredientId)
         {
             case var _ when ingredientId == pineappleId:
@@ -125,13 +212,12 @@ public class PineapplePasteStageManager : MonoBehaviour
 
         UpdateStatusUI();
         CheckStageComplete();
-
         return true;
     }
 
-    // ---------------------------------------------------------
-    //  INVALID CARD POPUP (for wrong cards)
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Displays a temporary popup for invalid ingredient cards.
+    /// </summary>
     void ShowInvalidCardPopup(string msg)
     {
         if (invalidCardPanel == null) return;
@@ -145,16 +231,16 @@ public class PineapplePasteStageManager : MonoBehaviour
         invalidPopupRoutine = StartCoroutine(InvalidPopupRoutine());
     }
 
-    System.Collections.IEnumerator InvalidPopupRoutine()
+    IEnumerator InvalidPopupRoutine()
     {
         invalidCardPanel.SetActive(true);
         yield return new WaitForSeconds(invalidPopupDuration);
         invalidCardPanel.SetActive(false);
     }
 
-    // ---------------------------------------------------------
-    //  STATUS + COMPLETION (Add to Recipe step)
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Updates the ingredient progress counter UI.
+    /// </summary>
     void UpdateStatusUI()
     {
         if (stageStatusText == null) return;
@@ -165,37 +251,41 @@ public class PineapplePasteStageManager : MonoBehaviour
             $"{lemonCount}/{requiredLemon}";
     }
 
+    /// <summary>
+    /// Checks whether all ingredients have been added via Add to Recipe.
+    /// </summary>
     bool IsStageComplete()
     {
         return
             pineappleCount >= requiredPineapples &&
-            sugarCount      >= requiredSugar &&
-            lemonCount      >= requiredLemon;
+            sugarCount >= requiredSugar &&
+            lemonCount >= requiredLemon;
     }
 
+    /// <summary>
+    /// Enables the mixing stage once all required ingredients are collected.
+    /// </summary>
     void CheckStageComplete()
     {
         if (mixStageStarted || !IsStageComplete())
             return;
 
         mixStageStarted = true;
-        Debug.Log("[PineappleStage] All ingredients collected! You can now mix them.");
 
-        // Show bowl and UI prompts
-        if (mixBowlUI != null)   mixBowlUI.SetActive(true);
-        if (bowlObject != null)  bowlObject.SetActive(true);
+        if (mixBowlUI != null) mixBowlUI.SetActive(true);
+        if (bowlObject != null) bowlObject.SetActive(true);
 
         if (bowlStatusText != null)
             bowlStatusText.text = "Drag the ingredients into the bowl!";
     }
 
-    // ---------------------------------------------------------
-    //  MIXING STEP – called by MixBowl.OnTriggerEnter
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Called when an ingredient is dropped into the mixing bowl.
+    /// </summary>
     public void OnIngredientDroppedInBowl(string ingredientId, GameObject ingredientGO)
     {
         if (!mixStageStarted || mixingComplete)
-            return; // ignore if not in mixing phase
+            return;
 
         switch (ingredientId)
         {
@@ -215,11 +305,9 @@ public class PineapplePasteStageManager : MonoBehaviour
                 break;
 
             default:
-                // not part of this stage
                 return;
         }
 
-        // Hide the ingredient model once it falls into the bowl
         if (ingredientGO != null)
             ingredientGO.SetActive(false);
 
@@ -227,6 +315,9 @@ public class PineapplePasteStageManager : MonoBehaviour
         CheckMixingComplete();
     }
 
+    /// <summary>
+    /// Updates the bowl UI to show current mixing progress.
+    /// </summary>
     void UpdateBowlStatusUI()
     {
         if (bowlStatusText == null) return;
@@ -238,14 +329,16 @@ public class PineapplePasteStageManager : MonoBehaviour
             $"Lemon {droppedLemon}/{requiredLemon}";
     }
 
+    /// <summary>
+    /// Checks whether all required ingredients have been mixed.
+    /// </summary>
     void CheckMixingComplete()
     {
         if (droppedPineapple >= requiredPineapples &&
-            droppedSugar      >= requiredSugar &&
-            droppedLemon      >= requiredLemon)
+            droppedSugar >= requiredSugar &&
+            droppedLemon >= requiredLemon)
         {
             mixingComplete = true;
-            Debug.Log("[PineappleStage] Mixing complete – pineapple paste ready!");
 
             if (bowlStatusText != null)
                 bowlStatusText.text = "Pineapple paste ready!";
@@ -253,14 +346,13 @@ public class PineapplePasteStageManager : MonoBehaviour
             if (finalPasteObject != null)
                 finalPasteObject.SetActive(true);
 
-            // 🔹 Show the final stage-complete UI
             ShowStageCompleteUI();
         }
     }
 
-    // ---------------------------------------------------------
-    //  🔹 PUBLIC: called when mixing is finished
-    // ---------------------------------------------------------
+    /// <summary>
+    /// Displays the stage completion UI and stops timers.
+    /// </summary>
     public void ShowStageCompleteUI()
     {
         if (stageCompleteShown) return;
@@ -269,16 +361,13 @@ public class PineapplePasteStageManager : MonoBehaviour
         if (stageCompletePanel != null)
             stageCompletePanel.SetActive(true);
 
-        // Stop UI stopwatch
         if (stopwatchUI != null)
             stopwatchUI.StopTimer();
 
-        // ✅ Stop DATABASE timer (Firebase)
         if (dbManager != null)
             dbManager.StopComponentTimer("PineappleTart", "PineapplePaste");
 
         if (stageCompleteText != null)
             stageCompleteText.text = "Pineapple Paste Complete!";
     }
-
 }

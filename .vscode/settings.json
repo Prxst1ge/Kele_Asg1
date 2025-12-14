@@ -66,5 +66,5 @@
     "explorer.fileNesting.patterns": {
         "*.sln": "*.csproj"
     },
-    "dotnet.defaultSolution": "Kele_Asg1-main.sln"
+    "dotnet.defaultSolution": "Asg1_Kele.sln"
 }

@@ -1,29 +1,95 @@
+/*
+ * Author: Javier
+ * Date: 10 November 2025
+ * Description:
+ * Controls interaction logic for an ingredient AR object.
+ * Handles rotation, add-to-recipe flow, UI feedback, and
+ * communication with stage managers and global progress systems.
+ */
+
 using System.Collections;
 using UnityEngine;
 using TMPro;
 
+/// <summary>
+/// Handles user interaction with an ingredient AR prefab.
+/// Includes rotation control, add-to-recipe logic, UI feedback,
+/// and validation with stage managers (Pineapple Paste / Biscuit).
+/// </summary>
 public class IngredientController : MonoBehaviour
 {
-    [Header("Setup")]
+    /// <summary>
+    /// Public read-only access to this ingredient's identifier.
+    /// Must match the reference image / database key.
+    /// </summary>
     public string IngredientId => ingredientId;
+
+    [Header("Setup")]
+
+    /// <summary>
+    /// Unique identifier for this ingredient.
+    /// Should match AR reference image and database entry.
+    /// </summary>
     [SerializeField] string ingredientId = "pineapple";
-    
+
+    /// <summary>
+    /// Transform of the 3D ingredient model to be rotated.
+    /// </summary>
     [SerializeField] Transform ingredientModel;
-    [SerializeField] TMP_Text statusText;          // per-ingredient status (optional)
-    [SerializeField] GameObject addedTickIcon;     // per-ingredient tick (optional)
+
+    /// <summary>
+    /// Optional per-ingredient status text (e.g. "Added to recipe").
+    /// </summary>
+    [SerializeField] TMP_Text statusText;
+
+    /// <summary>
+    /// Optional tick/check icon displayed when ingredient is added.
+    /// </summary>
+    [SerializeField] GameObject addedTickIcon;
 
     [Header("Global Progress UI")]
-    [SerializeField] TMP_Text globalStatusText;    
+
+    /// <summary>
+    /// Shared UI text used to display global ingredient progress.
+    /// </summary>
+    [SerializeField] TMP_Text globalStatusText;
+
+    /// <summary>
+    /// Total number of ingredients required for this stage.
+    /// </summary>
     [SerializeField] int totalIngredients = 3;
+
+    /// <summary>
+    /// Duration (in seconds) that the popup message remains visible.
+    /// </summary>
     [SerializeField] float popupDuration = 1.5f;
 
     [Header("Rotation")]
+
+    /// <summary>
+    /// Rotation speed (degrees per second) for the ingredient model.
+    /// </summary>
     [SerializeField] float rotationSpeed = 45f;
+
+    /// <summary>
+    /// Whether the ingredient model is currently rotating.
+    /// </summary>
     bool isRotating = false;
 
+    /// <summary>
+    /// Whether this ingredient has already been added to the recipe.
+    /// Prevents duplicate additions.
+    /// </summary>
     bool isAdded = false;
+
+    /// <summary>
+    /// Reference to the currently running popup coroutine.
+    /// </summary>
     Coroutine popupRoutine;
 
+    /// <summary>
+    /// Continuously rotates the ingredient model while rotation is enabled.
+    /// </summary>
     void Update()
     {
         if (isRotating && ingredientModel != null)
@@ -33,6 +99,11 @@ public class IngredientController : MonoBehaviour
     }
 
     // ------------------- ROTATE -------------------
+
+    /// <summary>
+    /// Toggles continuous rotation of the ingredient model.
+    /// Called by the Rotate button.
+    /// </summary>
     public void ToggleRotate()
     {
         if (ingredientModel == null)
@@ -46,6 +117,12 @@ public class IngredientController : MonoBehaviour
     }
 
     // ------------------ ADD TO RECIPE ------------------
+
+    /// <summary>
+    /// Adds this ingredient to the recipe if valid for the current stage.
+    /// Handles validation, UI updates, progress tracking, and disables
+    /// further interaction once added.
+    /// </summary>
     public void AddToRecipe()
     {
         // If already added, show popup and stop
@@ -56,19 +133,19 @@ public class IngredientController : MonoBehaviour
             return;
         }
 
+        // Pineapple Paste stage validation
         if (PineapplePasteStageManager.Instance != null)
         {
             bool accepted = PineapplePasteStageManager.Instance.RegisterIngredient(ingredientId);
 
             if (!accepted)
             {
-                // Stage rejected this ingredient → do NOT add anything here
                 Debug.Log($"[Ingredient] Stage rejected ingredient: {ingredientId}");
                 return;
             }
         }
 
-        // Biscuit stage support (only does something in Biscuit_AR scene)
+        // Biscuit stage validation
         if (BiscuitStageManager.Instance != null)
         {
             bool acceptedBiscuit = BiscuitStageManager.Instance.RegisterIngredient(ingredientId);
@@ -79,7 +156,7 @@ public class IngredientController : MonoBehaviour
             }
         }
 
-        // Mark as added FIRST TIME
+        // Mark as added (first time only)
         isAdded = true;
         IngredientProgressManager.MarkAdded(ingredientId);
 
@@ -100,12 +177,17 @@ public class IngredientController : MonoBehaviour
 
         Debug.Log($"[Ingredient] {ingredientId} added to recipe.");
 
+        // Disable Add button after use
         var btn = GetComponentInChildren<UnityEngine.UI.Button>();
         if (btn != null) btn.interactable = false;
-
     }
 
     // ---------------- UI POPUP --------------------
+
+    /// <summary>
+    /// Displays a temporary popup message in the global UI.
+    /// </summary>
+    /// <param name="message">Message to display.</param>
     void ShowGlobalMessage(string message)
     {
         if (globalStatusText == null) return;
@@ -116,6 +198,9 @@ public class IngredientController : MonoBehaviour
         popupRoutine = StartCoroutine(PopupRoutine(message));
     }
 
+    /// <summary>
+    /// Coroutine that shows and hides the popup message after a delay.
+    /// </summary>
     IEnumerator PopupRoutine(string message)
     {
         globalStatusText.gameObject.SetActive(true);
@@ -124,6 +209,10 @@ public class IngredientController : MonoBehaviour
         globalStatusText.gameObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Applies a short scale "pop" animation to the ingredient model.
+    /// </summary>
+    /// <param name="target">Transform to animate.</param>
     IEnumerator PopEffect(Transform target)
     {
         Vector3 original = target.localScale;

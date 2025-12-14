@@ -260,7 +260,17 @@ The Quality Assurance process focused primarily on validating the data integrity
 # 💻 Technical Walkthrough & IT Documentation
 
 ### 1. 🔑 Key Controls/Hacks 
-This section outlines the primary methods for interacting with the Kele AR application.
+### Key Controls
+
+- Tap buttons to navigate menus and confirm actions.
+- Move the phone to scan AR ingredient cards.
+- Tap “Show Details” to view ingredient information.
+- Tap “Rotate” to rotate the 3D ingredient model.
+- Tap add to recipe and drag ingredient models into the bowl to complete a stage.
+
+**Game Cheats / Hacks:**  
+There are no cheat codes or shortcuts implemented in this application.
+
 
 ### **General User Interface (UI) Controls**
 
@@ -316,6 +326,10 @@ This guide walks you through the step-by-step process of navigating the Kele AR 
 8.  **Replay for Best Time:**
     * Players can restart the Treasure Hunt at any time from the Main Menu to attempt to achieve a faster total completion time.
 
+### D. Puzzle / Game Solutions
+
+- Pineapple Paste Stage: Collect 2 Pineapple cards, 1 Sugar card, and 1 Lemon card, then drag all ingredients into the bowl.
+- Biscuit Stage: Collect 2 Flour, Butter, and Water cards, then drag all ingredients into the bowl.
 
 
 ### 2. 🖥️ Platforms and Hardware Requirements
@@ -332,12 +346,16 @@ The Kele AR application is an **AR-Required** application designed for the Andro
 
 ### 3. 🐛 Limitations and Known Bugs
 
+- In the deployed mobile build, scanning multiple copies of the same image marker may not always register correctly due to ARCore image tracking limitations. This issue does not occur in the Unity Editor using XR Simulation.
+- The application requires adequate lighting conditions for reliable image tracking.
+- The timer resets if the application is closed or the device is locked during gameplay.
+
 ## 📚 References and Citations (Both DDA and ITD)
 
 The following sources, assets, and documentation were utilized for the research, development, and artistic inspiration of the AR Pastry Chef application.
 
 **Source:** https://www.youtube.com/watch?v=A0nh0huo6ds&t=25s - Easter Egg Hunt AR game - Game reference
-**Source:** https://www.8thwall.com/prakria/treasurehunt - Prakria treasure hunt Ar game - Game referenc
+**Source:** https://www.8thwall.com/prakria/treasurehunt - Prakria treasure hunt Ar game - Game reference
 **Source:** https://sketchfab.com/3d-models/lemon-ab2625342f2c43fe8a383f8f9b4917ab - Lemon 3D model - Models used in game
 **Source:** https://sketchfab.com/3d-models/water-drinking-pool-85565ec5894e4fcc8e0f2fe363468b94 - Water 3D model - Models used in game
 **Source:** https://sketchfab.com/3d-models/flour-bag-26fee1793f60423392aac461d4ce4f79 - Flour 3D model - Models used in game
